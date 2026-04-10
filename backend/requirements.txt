@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+sqlalchemy>=2.0
+asyncpg
+alembic
+psycopg2-binary
+pydantic
+python-dotenv
+redis
+pydantic-settings
+aiosqlite
+pytest
+pybreaker
+prometheus-client
+structlog
+PyJWT==2.9.0
+passlib[bcrypt]
