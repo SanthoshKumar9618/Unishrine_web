@@ -17,11 +17,39 @@ class RealtimeOrchestrator:
         self.is_speaking = False
         self.llm_task: Optional[asyncio.Task] = None
         self.tts_task: Optional[asyncio.Task] = None
+        self.system_prompt = """
+            You are a real-time voice assistant.
+
+            Rules:
+            - Respond naturally like a human
+            - Keep answers short (2-3 sentences)
+            - Always reply in SAME language as user
+            - Do NOT translate
+            - Be clear and helpful
+            """
 
     # -------------------------
     # ENTRYPOINT
     # -------------------------
+    
+    async def _send_greeting(self):
+        greeting = "Hello! How can I assist you?"
+
+        # send to UI
+        await self.ws.send_json({
+            "type": "assistant",
+            "text": greeting
+        })
+
+        # speak it
+        self.tts_task = asyncio.create_task(
+            self._run_tts(greeting, self.current_language)
+    )
     async def start(self):
+    # ✅ FIRST MESSAGE FROM AI
+        await self._send_greeting()
+
+        # then start listening
         stt_task = asyncio.create_task(self._run_stt())
 
         try:
@@ -82,43 +110,38 @@ class RealtimeOrchestrator:
     # LLM STREAM
     # -------------------------
     async def _run_llm(self, text: str, lang: str):
-        print("[LLM START]")
+            print("[LLM START]")
 
-        full_text = ""
+            full_text = ""
 
-        try:
-            # minimal prompt = fastest response
-            prompt = f"""
-                    Respond STRICTLY in the same language as the user input.
-                    Do not translate. Do not switch languages.
+            try:
+                prompt = f"""
+        {self.system_prompt}
 
-                    User said:
-                    {text}
+        User: {text}
+        Assistant:
+        """
 
-                    Answer briefly (2-3 sentences).
-                    """
+                async for token in self.llm.stream(prompt):
+                    full_text += token
 
-            async for token in self.llm.stream(prompt):
-                full_text += token
+                print("[LLM DONE]:", full_text)
 
-            print("[LLM DONE]:", full_text)
+                await self.ws.send_json({
+                    "type": "assistant",
+                    "text": full_text
+                })
 
-            await self.ws.send_json({
-                "type": "assistant",
-                "text": full_text
-            })
+                if self.tts_task and not self.tts_task.done():
+                    print("[TTS] ⚠️ already running → skip")
+                    return
 
-            # 🔊 prevent overlapping TTS
-            if self.tts_task and not self.tts_task.done():
-                print("[TTS] ⚠️ already running → skip")
-                return
+                self.tts_task = asyncio.create_task(
+                    self._run_tts(full_text, lang)
+                )
 
-            self.tts_task = asyncio.create_task(
-                self._run_tts(full_text, lang)
-            )
-
-        except asyncio.CancelledError:
-            print("[LLM CANCELLED]")
+            except asyncio.CancelledError:
+                print("[LLM CANCELLED]")
 
     # -------------------------
     # TTS STREAM
