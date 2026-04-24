@@ -2,7 +2,6 @@ import Breadcrumb from "@/common/Breadcrumb";
 import HeaderOne from "@/layouts/headers/HeaderOne";
 import Wrapper from "@/layouts/Wrapper";
 import Link from "next/link";
-import CtaHomeOne from "../homes/home-1/CtaHomeOne";
 import FooterOne from "@/layouts/footers/FooterOne";
 import Image from "next/image";
 
@@ -30,7 +29,7 @@ export default function NotFound() {
             </div>
             <div className="divider"></div>
           </div>
-          <CtaHomeOne />
+          
           <FooterOne />
         </div>
       </div> 
