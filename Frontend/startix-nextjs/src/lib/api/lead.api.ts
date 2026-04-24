@@ -1,4 +1,6 @@
-const BASE_URL = "http://localhost:8000";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://unishrineweb-production.up.railway.app";
 
 export async function createLead(payload: {
   name: string;
@@ -15,10 +17,10 @@ export async function createLead(payload: {
     body: JSON.stringify(payload),
   });
 
-  // 🔴 IMPORTANT: handle non-JSON safely
   const text = await res.text();
 
   let data: any;
+
   try {
     data = JSON.parse(text);
   } catch {
@@ -30,7 +32,6 @@ export async function createLead(payload: {
     throw new Error(data?.detail || "Request failed");
   }
 
-  // ✅ Normalize response HERE (single place fix)
   return {
     success: data?.success ?? true,
     id: data?.data?.id || data?.lead_id || data?.id,

@@ -1,14 +1,19 @@
 export class VoiceAPI {
   ws: WebSocket | null = null;
   mediaStream: MediaStream | null = null;
-
   audioCtx: AudioContext | null = null;
 
-  // =========================
-  // CONNECT
-  // =========================
   connect(onMessage: (msg: any) => void) {
-    this.ws = new WebSocket("ws://localhost:8000/ws/voice");
+    const API_URL =
+      process.env.NEXT_PUBLIC_API_URL ||
+      "https://unishrineweb-production.up.railway.app";
+
+    const WS_URL = API_URL.replace("https://", "wss://").replace(
+      "http://",
+      "ws://"
+    );
+
+    this.ws = new WebSocket(`${WS_URL}/ws/voice`);
     this.ws.binaryType = "arraybuffer";
 
     this.ws.onopen = () => {
@@ -16,21 +21,16 @@ export class VoiceAPI {
     };
 
     this.ws.onmessage = async (event) => {
-      // TEXT
       if (typeof event.data === "string") {
         const msg = JSON.parse(event.data);
         onMessage(msg);
         return;
       }
 
-      // 🔥 AUDIO (WAV from backend)
       await this.playWav(event.data);
     };
   }
 
-  // =========================
-  // 🔊 PLAY WAV (ADD HERE)
-  // =========================
   async playWav(arrayBuffer: ArrayBuffer) {
     try {
       if (!this.audioCtx) {
@@ -48,16 +48,18 @@ export class VoiceAPI {
     }
   }
 
-  // =========================
-  // 🎤 MIC STREAM (FIXED)
-  // =========================
   async startMic() {
     if (!this.ws) return;
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+    });
+
     this.mediaStream = stream;
 
-    const audioContext = new AudioContext({ sampleRate: 16000 });
+    const audioContext = new AudioContext({
+      sampleRate: 16000,
+    });
 
     await audioContext.audioWorklet.addModule("/audio-processor.js");
 
