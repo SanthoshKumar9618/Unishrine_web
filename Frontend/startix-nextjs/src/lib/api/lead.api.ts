@@ -1,6 +1,6 @@
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://unishrineweb-production.up.railway.app";
+  "https://your-real-railway-domain.up.railway.app";
 
 export async function createLead(payload: {
   name: string;
