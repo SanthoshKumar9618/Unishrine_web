@@ -1,4 +1,6 @@
-const BASE_URL = "http://localhost:8000";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://your-real-railway-domain.up.railway.app";
 
 export async function createLead(payload: {
   name: string;
@@ -15,7 +17,7 @@ export async function createLead(payload: {
     body: JSON.stringify(payload),
   });
 
-  // 🔴 IMPORTANT: handle non-JSON safely
+  // Handle non-JSON safely
   const text = await res.text();
 
   let data: any;
@@ -30,7 +32,6 @@ export async function createLead(payload: {
     throw new Error(data?.detail || "Request failed");
   }
 
-  // ✅ Normalize response HERE (single place fix)
   return {
     success: data?.success ?? true,
     id: data?.data?.id || data?.lead_id || data?.id,
@@ -40,14 +41,15 @@ export async function createLead(payload: {
 export class VoiceAPI {
   ws: WebSocket | null = null;
   mediaStream: MediaStream | null = null;
-
   audioCtx: AudioContext | null = null;
 
   // =========================
   // CONNECT
   // =========================
   connect(onMessage: (msg: any) => void) {
-    this.ws = new WebSocket("ws://localhost:8000/ws/voice");
+    const wsUrl = BASE_URL.replace(/^http/, "ws") + "/ws/voice";
+
+    this.ws = new WebSocket(wsUrl);
     this.ws.binaryType = "arraybuffer";
 
     this.ws.onopen = () => {
@@ -62,13 +64,21 @@ export class VoiceAPI {
         return;
       }
 
-      // 🔥 AUDIO (WAV from backend)
+      // AUDIO (WAV from backend)
       await this.playWav(event.data);
+    };
+
+    this.ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    this.ws.onclose = () => {
+      console.log("WebSocket connection closed");
     };
   }
 
   // =========================
-  // 🔊 PLAY WAV (ADD HERE)
+  // PLAY WAV
   // =========================
   async playWav(arrayBuffer: ArrayBuffer) {
     try {
@@ -83,35 +93,54 @@ export class VoiceAPI {
       source.connect(this.audioCtx.destination);
       source.start();
     } catch (e) {
-      console.error("Audio error:", e);
+      console.error("Audio playback error:", e);
     }
   }
 
   // =========================
-  // 🎤 MIC STREAM (FIXED)
+  // MIC STREAM
   // =========================
   async startMic() {
     if (!this.ws) return;
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    this.mediaStream = stream;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
 
-    const audioContext = new AudioContext({ sampleRate: 16000 });
+      this.mediaStream = stream;
 
-    await audioContext.audioWorklet.addModule("/audio-processor.js");
+      const audioContext = new AudioContext({
+        sampleRate: 16000,
+      });
 
-    const source = audioContext.createMediaStreamSource(stream);
-    const worklet = new AudioWorkletNode(audioContext, "pcm-processor");
+      await audioContext.audioWorklet.addModule(
+        "/audio-processor.js"
+      );
 
-    source.connect(worklet);
+      const source =
+        audioContext.createMediaStreamSource(stream);
 
-    worklet.port.onmessage = (e) => {
-      if (this.ws?.readyState === 1) {
-        this.ws.send(e.data.buffer);
-      }
-    };
+      const worklet = new AudioWorkletNode(
+        audioContext,
+        "pcm-processor"
+      );
+
+      source.connect(worklet);
+
+      worklet.port.onmessage = (e) => {
+        if (this.ws?.readyState === WebSocket.OPEN) {
+          this.ws.send(e.data.buffer);
+        }
+      };
+    } catch (error) {
+      console.error("Microphone access error:", error);
+    }
   }
 
+  // =========================
+  // STOP
+  // =========================
   stop() {
     this.ws?.close();
     this.mediaStream?.getTracks().forEach((t) => t.stop());

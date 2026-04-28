@@ -23,6 +23,12 @@ class RealtimeOrchestrator:
 
         self.last_text = ""
         self.is_speaking = False
+        self.pending_user_text = ""
+        self.pause_task: Optional[asyncio.Task] = None
+        self.conversation_history = []
+        # Human-like pause settings
+        self.reply_delay_seconds = 2
+        self.min_text_length = 3
 
         self.llm_task: Optional[asyncio.Task] = None
         self.tts_task: Optional[asyncio.Task] = None
@@ -160,7 +166,10 @@ class RealtimeOrchestrator:
     async def _handle_text(self, text: str):
         text = text.strip()
 
-        if len(text) < 2 or text == self.last_text:
+        if len(text) < self.min_text_length:
+            return
+
+        if text == self.last_text:
             return
 
         self.last_text = text
@@ -169,38 +178,82 @@ class RealtimeOrchestrator:
             "type": "user",
             "text": text,
         })
+        self.conversation_history.append(
+                f"User: {text}"
+            )
 
-        print("[LLM TRIGGER]:", text)
+        print("[USER SPEECH]:", text)
 
-# tell frontend to stop currently playing audio
+        # stop frontend current audio immediately
         await self.ws.send_json({
             "type": "interrupt"
         })
 
-        # stop old TTS
+        # cancel old waiting pause
+        if self.pause_task and not self.pause_task.done():
+            self.pause_task.cancel()
+            try:
+                await self.pause_task
+            except:
+                pass
+
+        # cancel old TTS immediately
         if self.tts_task and not self.tts_task.done():
-            print("[TTS INTERRUPT] stopping old speech")
-
+            print("[TTS INTERRUPTED]")
             self.tts_task.cancel()
-
             try:
                 await self.tts_task
-            except Exception:
+            except:
                 pass
 
-        # stop old LLM
+        # cancel old LLM if still generating
         if self.llm_task and not self.llm_task.done():
+            print("[LLM INTERRUPTED]")
             self.llm_task.cancel()
-
             try:
                 await self.llm_task
-            except Exception:
+            except:
                 pass
-        lang = self.current_language
 
-        self.llm_task = asyncio.create_task(
-            self._run_llm(text, lang)
+        # important:
+        # merge user continuation instead of overwrite
+        if self.pending_user_text:
+            self.pending_user_text += " " + text
+        else:
+            self.pending_user_text = text
+
+        # wait 2 sec before final reply
+        self.pause_task = asyncio.create_task(
+            self._delayed_reply()
         )
+        
+        
+    async def _delayed_reply(self):
+        try:
+            print("[WAITING 2 SEC BEFORE REPLY]")
+
+            await asyncio.sleep(2)
+
+            if not self.pending_user_text:
+                return
+
+            final_text = self.pending_user_text
+            self.pending_user_text = ""
+
+            print("[FINAL USER INPUT]:", final_text)
+
+            self.llm_task = asyncio.create_task(
+                self._run_llm(
+                    final_text,
+                    self.current_language
+                )
+            )
+
+        except asyncio.CancelledError:
+            print("[USER CONTINUED SPEAKING]")
+       
+        
+    
 
     # =====================================
     # LLM STREAM
@@ -210,32 +263,47 @@ class RealtimeOrchestrator:
 
         full_text = ""
         language_instruction = get_language_instruction(lang)
+
         try:
+            # keep last 6 exchanges only
+            recent_history = "\n".join(
+                self.conversation_history[-6:]
+            )
+
             prompt = f"""
-            SYSTEM:
+    SYSTEM:
+    {language_instruction}
 
-            {language_instruction}
+    BUSINESS ROLE:
+    {self.system_prompt}
 
-            BUSINESS ROLE:
-            {self.system_prompt}
+    CONVERSATION HISTORY:
+    {recent_history}
 
-            USER MESSAGE:
-            {text}
+    LATEST USER MESSAGE:
+    {text}
 
-            ASSISTANT RESPONSE:
-            """
+    IMPORTANT:
+    Do not repeat already answered questions.
+    Continue naturally from previous context.
+    Ask only the next required question.
+
+    ASSISTANT RESPONSE:
+    """
 
             async for token in self.llm.stream(prompt):
                 full_text += token
 
             print("[LLM DONE]:", full_text)
 
+            self.conversation_history.append(
+                f"Assistant: {full_text}"
+            )
+
             await self.ws.send_json({
                 "type": "assistant",
                 "text": full_text,
             })
-
-            
 
             self.tts_task = asyncio.create_task(
                 self._run_tts(full_text, lang)

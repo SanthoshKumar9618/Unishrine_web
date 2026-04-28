@@ -1,3 +1,11 @@
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://your-real-railway-domain.up.railway.app";
+
+const WS_URL = API_URL
+  .replace("https://", "wss://")
+  .replace("http://", "ws://");
+
 export class VoiceAPI {
   ws: WebSocket | null = null;
   mediaStream: MediaStream | null = null;
@@ -18,14 +26,6 @@ export class VoiceAPI {
     },
     onMessage: (msg: any) => void
   ) {
-    const API_URL =
-      process.env.NEXT_PUBLIC_API_URL ||
-      "http://localhost:8000";
-
-    const WS_URL = API_URL
-      .replace("https://", "wss://")
-      .replace("http://", "ws://");
-
     this.ws = new WebSocket(`${WS_URL}/ws/voice`);
     this.ws.binaryType = "arraybuffer";
 
@@ -55,14 +55,11 @@ export class VoiceAPI {
 
     this.ws.onmessage = async (event) => {
       try {
-        // =====================================
         // JSON EVENTS FROM BACKEND
-        // =====================================
         if (typeof event.data === "string") {
           const msg = JSON.parse(event.data);
 
-          // HARD INTERRUPT:
-          // stop currently playing audio immediately
+          // HARD INTERRUPT
           if (msg.type === "interrupt") {
             console.log("🛑 Interrupt received → stopping audio");
             this.stopCurrentAudio();
@@ -73,9 +70,7 @@ export class VoiceAPI {
           return;
         }
 
-        // =====================================
         // AUDIO BYTES FROM BACKEND (TTS)
-        // =====================================
         await this.playWav(event.data);
       } catch (error) {
         console.error("WebSocket message error:", error);
@@ -93,7 +88,6 @@ export class VoiceAPI {
 
   // =====================================
   // STOP CURRENT PLAYING AUDIO
-  // (for interruption support)
   // =====================================
   stopCurrentAudio() {
     try {
@@ -102,7 +96,7 @@ export class VoiceAPI {
         this.currentSource.disconnect();
         this.currentSource = null;
       }
-    } catch (error) {
+    } catch {
       console.log("Audio stop ignored");
     }
   }
@@ -179,7 +173,6 @@ export class VoiceAPI {
         await audioContext.resume();
       }
 
-      // public/audio-processor.js
       await audioContext.audioWorklet.addModule(
         "/audio-processor.js"
       );
@@ -236,7 +229,6 @@ export class VoiceAPI {
   stop() {
     console.log("🛑 Stopping VoiceAPI");
 
-    // stop playing TTS first
     this.stopCurrentAudio();
 
     if (this.ws) {

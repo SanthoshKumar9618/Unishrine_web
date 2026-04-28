@@ -120,13 +120,21 @@ export default function DemoCallPage() {
   };
 
   const handleEnd = () => {
-    apiRef.current?.stop();
-    setStatus("ended");
+  apiRef.current?.stop();
+  setStatus("ended");
 
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 500);
-  };
+  localStorage.setItem(
+    "call_transcript",
+    JSON.stringify(messages)
+  );
+
+  localStorage.setItem(
+    "call_duration",
+    String(duration)
+  );
+
+  window.location.href = "/call-summary";
+};
 
   return (
     <section
