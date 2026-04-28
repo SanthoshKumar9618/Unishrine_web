@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "bootstrap": "^5.3.8",
+    "framer-motion": "^12.38.0",
     "gsap": "^3.13.0",
     "jarallax": "^2.2.1",
     "lucide-react": "^1.8.0",

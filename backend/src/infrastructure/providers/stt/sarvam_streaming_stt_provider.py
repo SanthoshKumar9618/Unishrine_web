@@ -3,20 +3,29 @@ from sarvamai import AsyncSarvamAI
 
 
 class SarvamStreamingSTTProvider:
-
     def __init__(self, api_key: str):
         self.client = AsyncSarvamAI(
             api_subscription_key=api_key
         )
 
-    def get_connection(self):
+    def get_connection(
+        self,
+        language_code: str = "en-IN",
+    ):
         """
-        Return context manager (NOT awaited)
+        Dynamic language support
+        based on frontend selection
         """
+
+        print(
+            "[STT CONNECTION LANGUAGE]:",
+            language_code
+        )
+
         return self.client.speech_to_text_streaming.connect(
             model="saaras:v3",
             mode="transcribe",
-            language_code="en-IN",
+            language_code=language_code,
             sample_rate=16000,
             input_audio_codec="pcm_s16le",
             high_vad_sensitivity=True,
@@ -25,7 +34,6 @@ class SarvamStreamingSTTProvider:
 
 
 class SarvamWSConnection:
-
     def __init__(self, ws):
         self.ws = ws
 
@@ -36,7 +44,6 @@ class SarvamWSConnection:
         await self.ws.close()
 
     async def transcribe(self, audio: bytes):
-
         audio_b64 = base64.b64encode(audio).decode("utf-8")
 
         await self.ws.transcribe(
@@ -46,7 +53,6 @@ class SarvamWSConnection:
         )
 
     async def recv(self):
-
         async for message in self.ws:
             return message
 

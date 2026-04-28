@@ -3,13 +3,24 @@ export class VoiceAPI {
   mediaStream: MediaStream | null = null;
   audioCtx: AudioContext | null = null;
 
-  // =========================
-  // CONNECT WEBSOCKET
-  // =========================
-  connect(onMessage: (msg: any) => void) {
+  // Used for interruption handling (barge-in)
+  private currentSource: AudioBufferSourceNode | null = null;
+
+  // =====================================
+  // CONNECT WEBSOCKET + SEND SESSION CONFIG
+  // =====================================
+  connect(
+    config: {
+      language: string;
+      voice: string;
+      assistant_type: string;
+      prompt: string;
+    },
+    onMessage: (msg: any) => void
+  ) {
     const API_URL =
       process.env.NEXT_PUBLIC_API_URL ||
-      "https://unishrineweb-production.up.railway.app";
+      "http://localhost:8000";
 
     const WS_URL = API_URL
       .replace("https://", "wss://")
@@ -18,25 +29,53 @@ export class VoiceAPI {
     this.ws = new WebSocket(`${WS_URL}/ws/voice`);
     this.ws.binaryType = "arraybuffer";
 
-    this.ws.onopen = () => {
+    this.ws.onopen = async () => {
       console.log("✅ WebSocket connected");
-      this.startMic();
+
+      try {
+        // STEP 1: Send session configuration first
+        this.ws?.send(
+          JSON.stringify({
+            type: "session_config",
+            language: config.language,
+            voice: config.voice,
+            assistant_type: config.assistant_type,
+            prompt: config.prompt,
+          })
+        );
+
+        console.log("📤 Session config sent:", config);
+
+        // STEP 2: Start microphone after config is sent
+        await this.startMic();
+      } catch (error) {
+        console.error("WebSocket onopen error:", error);
+      }
     };
 
     this.ws.onmessage = async (event) => {
       try {
-        // =========================
-        // TEXT MESSAGE
-        // =========================
+        // =====================================
+        // JSON EVENTS FROM BACKEND
+        // =====================================
         if (typeof event.data === "string") {
           const msg = JSON.parse(event.data);
+
+          // HARD INTERRUPT:
+          // stop currently playing audio immediately
+          if (msg.type === "interrupt") {
+            console.log("🛑 Interrupt received → stopping audio");
+            this.stopCurrentAudio();
+            return;
+          }
+
           onMessage(msg);
           return;
         }
 
-        // =========================
-        // AUDIO MESSAGE (TTS)
-        // =========================
+        // =====================================
+        // AUDIO BYTES FROM BACKEND (TTS)
+        // =====================================
         await this.playWav(event.data);
       } catch (error) {
         console.error("WebSocket message error:", error);
@@ -44,7 +83,7 @@ export class VoiceAPI {
     };
 
     this.ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
+      console.error("❌ WebSocket error:", error);
     };
 
     this.ws.onclose = () => {
@@ -52,28 +91,55 @@ export class VoiceAPI {
     };
   }
 
-  // =========================
+  // =====================================
+  // STOP CURRENT PLAYING AUDIO
+  // (for interruption support)
+  // =====================================
+  stopCurrentAudio() {
+    try {
+      if (this.currentSource) {
+        this.currentSource.stop();
+        this.currentSource.disconnect();
+        this.currentSource = null;
+      }
+    } catch (error) {
+      console.log("Audio stop ignored");
+    }
+  }
+
+  // =====================================
   // PLAY WAV AUDIO FROM BACKEND
-  // =========================
+  // =====================================
   async playWav(arrayBuffer: ArrayBuffer) {
     try {
       if (!this.audioCtx) {
         this.audioCtx = new AudioContext();
       }
 
-      // Resume if suspended (browser autoplay policy)
       if (this.audioCtx.state === "suspended") {
         await this.audioCtx.resume();
       }
 
-      const decodedBuffer =
-        await this.audioCtx.decodeAudioData(arrayBuffer);
+      // stop previous audio before playing new one
+      this.stopCurrentAudio();
 
-      const source =
-        this.audioCtx.createBufferSource();
+      const decodedBuffer = await this.audioCtx.decodeAudioData(
+        arrayBuffer.slice(0)
+      );
 
+      const source = this.audioCtx.createBufferSource();
       source.buffer = decodedBuffer;
       source.connect(this.audioCtx.destination);
+
+      // track currently playing source
+      this.currentSource = source;
+
+      source.onended = () => {
+        if (this.currentSource === source) {
+          this.currentSource = null;
+        }
+      };
+
       source.start();
 
       console.log("🔊 Audio played");
@@ -82,34 +148,27 @@ export class VoiceAPI {
     }
   }
 
-  // =========================
+  // =====================================
   // START MICROPHONE STREAM
-  // =========================
+  // =====================================
   async startMic() {
     if (!this.ws) return;
 
     try {
       console.log("🎤 Requesting microphone access...");
 
-      // =========================
-      // GET USER MIC
-      // =========================
-      const stream =
-        await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-          },
-        });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
 
       this.mediaStream = stream;
 
       console.log("✅ Microphone permission granted");
 
-      // =========================
-      // AUDIO CONTEXT (16kHz)
-      // =========================
       const audioContext = new AudioContext({
         sampleRate: 16000,
       });
@@ -120,49 +179,34 @@ export class VoiceAPI {
         await audioContext.resume();
       }
 
-      // =========================
-      // LOAD AUDIO WORKLET
-      // =========================
+      // public/audio-processor.js
       await audioContext.audioWorklet.addModule(
         "/audio-processor.js"
       );
 
       console.log("✅ Audio worklet loaded");
 
-      // =========================
-      // CREATE AUDIO GRAPH
-      // =========================
-      const source =
-        audioContext.createMediaStreamSource(stream);
+      const source = audioContext.createMediaStreamSource(stream);
 
-      const worklet =
-        new AudioWorkletNode(
-          audioContext,
-          "pcm-processor"
-        );
+      const worklet = new AudioWorkletNode(
+        audioContext,
+        "pcm-processor"
+      );
 
-      // source → processor
       source.connect(worklet);
 
-      // VERY IMPORTANT:
-      // keeps worklet alive in Chrome
+      // Chrome stability
       worklet.connect(audioContext.destination);
 
       console.log("✅ Audio graph connected");
 
-      // =========================
-      // SEND PCM16 TO BACKEND
-      // =========================
       worklet.port.onmessage = (event) => {
         if (
           this.ws &&
           this.ws.readyState === WebSocket.OPEN
         ) {
           try {
-            // audio-processor.js already converts
-            // Float32 → Int16 PCM
-            const pcm16 =
-              event.data as Int16Array;
+            const pcm16 = event.data as Int16Array;
 
             const buffer = pcm16.buffer.slice(
               pcm16.byteOffset,
@@ -170,11 +214,6 @@ export class VoiceAPI {
             ) as ArrayBuffer;
 
             this.ws.send(buffer);
-
-            console.log(
-              "📤 Audio chunk sent:",
-              pcm16.length
-            );
           } catch (error) {
             console.error(
               "Failed to send audio chunk:",
@@ -187,25 +226,24 @@ export class VoiceAPI {
       console.log("🚀 Mic streaming started");
     } catch (error) {
       console.error("Microphone error:", error);
-      alert(
-        "Please allow microphone access to continue."
-      );
+      alert("Please allow microphone access to continue.");
     }
   }
 
-  // =========================
+  // =====================================
   // STOP EVERYTHING
-  // =========================
+  // =====================================
   stop() {
     console.log("🛑 Stopping VoiceAPI");
 
-    // Close websocket
+    // stop playing TTS first
+    this.stopCurrentAudio();
+
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
 
-    // Stop mic stream
     if (this.mediaStream) {
       this.mediaStream
         .getTracks()
@@ -214,7 +252,6 @@ export class VoiceAPI {
       this.mediaStream = null;
     }
 
-    // Close audio context
     if (this.audioCtx) {
       this.audioCtx.close();
       this.audioCtx = null;
