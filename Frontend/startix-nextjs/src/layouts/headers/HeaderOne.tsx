@@ -53,7 +53,7 @@ export default function HeaderOne() {
               {/* <!-- Right Side Content --> */}
               <div className="right-side">
                 <div className="social-nav d-flex align-items-center gap-3">
-                  <a href="#">
+                  <a href="https://www.facebook.com/share/18MGgvUahE/?mibextid=wwXIfr">
                     <i className="ti ti-brand-facebook"></i>
                   </a>
                   <a href="#">
@@ -62,7 +62,7 @@ export default function HeaderOne() {
                   <a href="#">
                     <i className="ti ti-brand-linkedin"></i>
                   </a>
-                  <a href="#">
+                  <a href="https://www.instagram.com/unishrine?igsh=a25weWVuMHZhbDFp&utm_source=qr">
                     <i className="ti ti-brand-instagram"></i>
                   </a>
                 </div>

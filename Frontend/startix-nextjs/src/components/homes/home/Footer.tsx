@@ -54,10 +54,10 @@ export default function Footer() {
               </p>
 
               <div className="social-nav style-three">
-                <a href="#"><i className="ti ti-brand-facebook"></i></a>
+                <a href="https://www.facebook.com/share/18MGgvUahE/?mibextid=wwXIfr"><i className="ti ti-brand-facebook"></i></a>
                 <a href="#"><i className="ti ti-brand-linkedin"></i></a>
                 <a href="#"><i className="ti ti-brand-x"></i></a>
-                <a href="#"><i className="ti ti-brand-instagram"></i></a>
+                <a href="https://www.instagram.com/unishrine?igsh=a25weWVuMHZhbDFp&utm_source=qr"><i className="ti ti-brand-instagram"></i></a>
               </div>
 
             </div>

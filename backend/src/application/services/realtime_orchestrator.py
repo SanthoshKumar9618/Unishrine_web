@@ -1,7 +1,7 @@
 import asyncio
 from typing import Optional
 from src.domain.config.language_rules import get_language_instruction
-from src.domain.config.greetings import GREETING_MAP
+from src.domain.config.greetings import  get_dynamic_greeting
 from src.domain.config.assistant_prompts import ASSISTANT_PROMPTS
 
 class RealtimeOrchestrator:
@@ -95,28 +95,44 @@ class RealtimeOrchestrator:
     # GREETING
     # =====================================
     async def _send_greeting(self):
-        
+        """
+        Dynamic greeting based on:
+        - assistant_type
+        - selected language
+        - selected frontend voice
 
-        greeting = GREETING_MAP.get(
-            self.assistant_type,
-            {}
-        ).get(
-            self.current_language,
-            "Hello! How can I assist you today?"
+        Example:
+        male_1 -> Abhilash
+        female_1 -> Vidya
+        female_2 -> Manisha
+        """
+
+        greeting = get_dynamic_greeting(
+            assistant_type=self.assistant_type,
+            language_code=self.current_language,
+            selected_voice=self.selected_voice,
         )
 
+        print("\n========== GREETING ==========")
+        print("Assistant Type:", self.assistant_type)
+        print("Language:", self.current_language)
+        print("Selected Voice:", self.selected_voice)
+        print("Greeting:", greeting)
+        print("================================\n")
+
+        # send greeting text to frontend UI
         await self.ws.send_json({
             "type": "assistant",
             "text": greeting,
         })
 
+        # convert greeting text -> voice audio
         self.tts_task = asyncio.create_task(
             self._run_tts(
                 greeting,
                 self.current_language,
             )
         )
-
     # =====================================
     # ENTRYPOINT
     # =====================================
@@ -284,9 +300,14 @@ class RealtimeOrchestrator:
     {text}
 
     IMPORTANT:
-    Do not repeat already answered questions.
-    Continue naturally from previous context.
-    Ask only the next required question.
+- Do not repeat already answered questions
+- Continue naturally from previous context
+- Ask only the next required question
+- Never assume user details that were not explicitly provided
+- If information is missing, politely ask for clarification
+- If the user has not shared their name, do not use any name
+- Do not guess customer information
+- Only use facts explicitly stated by the user
 
     ASSISTANT RESPONSE:
     """

@@ -1,22 +1,135 @@
-GREETING_MAP = {
-            "clinic_receptionist": {
-                "en-IN": "Hello! I can help you schedule your doctor appointment. May I know your name and preferred doctor?",
-                "te-IN": "నమస్కారం! నేను మీ డాక్టర్ అపాయింట్మెంట్ బుక్ చేయడంలో సహాయం చేస్తాను. మీ పేరు మరియు కావలసిన డాక్టర్ పేరు చెప్పండి.",
-                "hi-IN": "नमस्ते! मैं आपकी डॉक्टर अपॉइंटमेंट बुक करने में मदद कर सकता हूँ। कृपया अपना नाम और पसंदीदा डॉक्टर बताइए।",
-                "kn-IN": "ನಮಸ್ಕಾರ! ನಾನು ನಿಮ್ಮ ಡಾಕ್ಟರ್ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ಬುಕ್ ಮಾಡಲು ಸಹಾಯ ಮಾಡುತ್ತೇನೆ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಹೆಸರು ಮತ್ತು ಬೇಕಾದ ಡಾಕ್ಟರ್ ಹೆಸರನ್ನು ತಿಳಿಸಿ।",
-            },
+# src/domain/config/greetings.py
 
-            "insurance_advisor": {
-                "en-IN": "Hello! I can help you choose the right insurance plan. May I know your age and family coverage needs?",
-                "te-IN": "నమస్కారం! సరైన ఇన్సూరెన్స్ ప్లాన్ ఎంపిక చేయడంలో నేను సహాయం చేస్తాను. మీ వయస్సు మరియు కుటుంబ అవసరాలు చెప్పండి.",
-                "hi-IN": "नमस्ते! मैं सही इंश्योरेंस प्लान चुनने में आपकी मदद कर सकता हूँ। कृपया अपनी उम्र और परिवार की ज़रूरत बताइए।",
-                "kn-IN": "ನಮಸ್ಕಾರ! ಸರಿಯಾದ ಇನ್ಶೂರೆನ್ಸ್ ಯೋಜನೆ ಆಯ್ಕೆ ಮಾಡಲು ನಾನು ಸಹಾಯ ಮಾಡುತ್ತೇನೆ. ನಿಮ್ಮ ವಯಸ್ಸು ಮತ್ತು ಕುಟುಂಬದ ಅಗತ್ಯಗಳನ್ನು ತಿಳಿಸಿ।",
-            },
+VOICE_NAME_MAP = {
+    "male_1": "Abhilash",
+    "female_1": "Vidya",
+    "female_2": "Manisha",
+}
 
-            "ecommerce_support": {
-                "en-IN": "Hello! I can help with your order, refund, or delivery issue. Please share your order details.",
-                "te-IN": "నమస్కారం! మీ ఆర్డర్, రిఫండ్ లేదా డెలివరీ సమస్యలో నేను సహాయం చేస్తాను. దయచేసి మీ ఆర్డర్ వివరాలు చెప్పండి.",
-                "hi-IN": "नमस्ते! मैं आपके ऑर्डर, रिफंड या डिलीवरी समस्या में मदद कर सकता हूँ। कृपया अपने ऑर्डर की जानकारी बताइए।",
-                "kn-IN": "ನಮಸ್ಕಾರ! ನಿಮ್ಮ ಆರ್ಡರ್, ರಿಫಂಡ್ ಅಥವಾ ಡೆಲಿವರಿ ಸಮಸ್ಯೆಯಲ್ಲಿ ನಾನು ಸಹಾಯ ಮಾಡುತ್ತೇನೆ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಆರ್ಡರ್ ವಿವರಗಳನ್ನು ತಿಳಿಸಿ।",
-            },
+
+def _get_gender_word(selected_voice: str) -> str:
+    if selected_voice in ["female_1", "female_2"]:
+        return {
+            "en-IN": "speaking",
+            "hi-IN": "बोल रही हूँ",
+            "te-IN": "మాట్లాడుతున్నాను",
+            "kn-IN": "ಮಾತನಾಡುತ್ತಿದ್ದೇನೆ",
         }
+
+    return {
+        "en-IN": "speaking",
+        "hi-IN": "बोल रहा हूँ",
+        "te-IN": "మాట్లాడుతున్నాను",
+        "kn-IN": "ಮಾತನಾಡುತ್ತಿದ್ದೇನೆ",
+    }
+
+
+def _build_greeting_map(
+    voice_name: str,
+    gender_words: dict,
+):
+    return {
+        "clinic_receptionist": {
+            "en-IN": (
+                f"Namaste! This is {voice_name} {gender_words['en-IN']} "
+                f"from CarePlus Clinic. I can help you with appointment booking. "
+                f"May I know your preferred doctor and your name?"
+            ),
+
+            "hi-IN": (
+                f"नमस्ते! मैं {voice_name} {gender_words['hi-IN']} "
+                f"CarePlus Clinic से। मैं आपकी appointment booking में मदद कर सकता हूँ। "
+                f"कृपया अपना नाम और पसंदीदा doctor बताइए।"
+            ),
+
+            "te-IN": (
+                f"నమస్కారం! నేను {voice_name} {gender_words['te-IN']} "
+                f"CarePlus Clinic నుండి. మీ appointment booking లో సహాయం చేస్తాను. "
+                f"మీ పేరు మరియు కావలసిన doctor పేరు చెప్పండి."
+            ),
+
+            "kn-IN": (
+                f"ನಮಸ್ಕಾರ! ನಾನು {voice_name} {gender_words['kn-IN']} "
+                f"CarePlus Clinic ಇಂದ. ನಿಮ್ಮ appointment booking ನಲ್ಲಿ ಸಹಾಯ ಮಾಡುತ್ತೇನೆ. "
+                f"ದಯವಿಟ್ಟು ನಿಮ್ಮ ಹೆಸರು ಮತ್ತು ಬೇಕಾದ doctor ಹೆಸರನ್ನು ತಿಳಿಸಿ."
+            ),
+        },
+
+        "insurance_advisor": {
+            "en-IN": (
+                f"Namaste! This is {voice_name} {gender_words['en-IN']} "
+                f"from Bharat Insurance Group. I can help you choose the right insurance plan. "
+                f"May I know your age and family coverage needs?"
+            ),
+
+            "hi-IN": (
+                f"नमस्ते! मैं {voice_name} {gender_words['hi-IN']} "
+                f"Bharat Insurance Group से। मैं सही insurance plan चुनने में मदद कर सकता हूँ। "
+                f"कृपया अपनी उम्र और family coverage needs बताइए।"
+            ),
+
+            "te-IN": (
+                f"నమస్కారం! నేను {voice_name} {gender_words['te-IN']} "
+                f"Bharat Insurance Group నుండి. సరైన insurance plan ఎంపికలో సహాయం చేస్తాను. "
+                f"మీ వయస్సు మరియు family coverage అవసరాలు చెప్పండి."
+            ),
+
+            "kn-IN": (
+                f"ನಮಸ್ಕಾರ! ನಾನು {voice_name} {gender_words['kn-IN']} "
+                f"Bharat Insurance Group ಇಂದ. ಸರಿಯಾದ insurance plan ಆಯ್ಕೆ ಮಾಡಲು ಸಹಾಯ ಮಾಡುತ್ತೇನೆ. "
+                f"ನಿಮ್ಮ ವಯಸ್ಸು ಮತ್ತು family coverage ಅಗತ್ಯಗಳನ್ನು ತಿಳಿಸಿ."
+            ),
+        },
+
+        "ecommerce_support": {
+            "en-IN": (
+                f"Namaste! This is {voice_name} {gender_words['en-IN']} "
+                f"from ShopEasy India. I can help with your order, refund, or delivery issue. "
+                f"Please share your order details."
+            ),
+
+            "hi-IN": (
+                f"नमस्ते! मैं {voice_name} {gender_words['hi-IN']} "
+                f"ShopEasy India से। मैं आपके order, refund, या delivery issue में मदद कर सकता हूँ। "
+                f"कृपया अपने order details बताइए।"
+            ),
+
+            "te-IN": (
+                f"నమస్కారం! నేను {voice_name} {gender_words['te-IN']} "
+                f"ShopEasy India నుండి. మీ order, refund లేదా delivery సమస్యలో సహాయం చేస్తాను. "
+                f"దయచేసి మీ order వివరాలు చెప్పండి."
+            ),
+
+            "kn-IN": (
+                f"ನಮಸ್ಕಾರ! ನಾನು {voice_name} {gender_words['kn-IN']} "
+                f"ShopEasy India ಇಂದ. ನಿಮ್ಮ order, refund ಅಥವಾ delivery ಸಮಸ್ಯೆಯಲ್ಲಿ ಸಹಾಯ ಮಾಡುತ್ತೇನೆ. "
+                f"ದಯವಿಟ್ಟು ನಿಮ್ಮ order ವಿವರಗಳನ್ನು ತಿಳಿಸಿ."
+            ),
+        },
+    }
+
+
+def get_dynamic_greeting(
+    assistant_type: str,
+    language_code: str,
+    selected_voice: str,
+) -> str:
+    voice_name = VOICE_NAME_MAP.get(
+        selected_voice,
+        "Vidya",
+    )
+
+    gender_words = _get_gender_word(selected_voice)
+
+    greeting_map = _build_greeting_map(
+        voice_name,
+        gender_words,
+    )
+
+    return greeting_map.get(
+        assistant_type,
+        {},
+    ).get(
+        language_code,
+        "Hello! How may I help you today?",
+    )

@@ -1,112 +1,112 @@
 def get_language_instruction(lang: str) -> str:
     """
-    Language-specific natural speech rules only.
-    Main business logic stays inside ASSISTANT_PROMPTS.
-    This function only controls how the assistant speaks.
+    Language-specific speaking behavior only.
+    Business logic stays inside ASSISTANT_PROMPTS.
+
+    This controls:
+    - how the assistant speaks
+    - response style
+    - tone
+    - sentence structure
+    - natural conversational flow
+    - don't use difficult words
+    -don't go out of things which are not relevant to the conversation
     """
 
     rules = {
         "te-IN": """
-సహజంగా మనుషులు మాట్లాడినట్లుగా తెలుగులో సమాధానం ఇవ్వండి.
+Speak primarily in natural Telugu with simple conversational English mixed only where common and natural.don't use difficult telugu wordslike a difficult words.
 
-ఒక్కసారి ఒక ప్రశ్న మాత్రమే అడగండి.
-గరిష్టంగా 2 చిన్న వాక్యాలు మాత్రమే ఉపయోగించండి.
+Rules:
+- Sound like a real human conversation, never robotic
+- Keep sentences short and easy to understand
+- Use polite and warm Indian conversational tone
+- Ask one question at a time
+- Do not give long paragraph responses
+- Use natural pause-style responses suitable for voice conversation
+- Confirm important details clearly like names, dates, amounts, appointments, policy details
+- If the customer sounds confused, explain step by step simply
+- If interrupted, pause naturally and continue smoothly
+- Avoid overly formal language
+- Use familiar conversational Telugu used in daily speech
 
-చాలా కఠినమైన శుద్ధ తెలుగు అవసరం లేదు.
-రోబోట్‌లా కాకుండా సహజంగా మాట్లాడండి.
-
-సాధారణంగా మాట్లాడేటప్పుడు వచ్చే ఇంగ్లీష్ పదాలు
-ఉదాహరణకు:
-బ్రేక్‌ఫాస్ట్, మీటింగ్, డాక్టర్, అపాయింట్మెంట్,
-ఇన్సూరెన్స్, పేమెంట్, రిపోర్ట్, కాల్, మెసేజ్
-
-వాటిని తెలుగు లిపిలోనే సహజంగా ఉపయోగించండి.
-
-ఉదాహరణలు:
-నేను బ్రేక్‌ఫాస్ట్ చేశాను.
-డాక్టర్ అపాయింట్మెంట్ బుక్ చేద్దాం.
-మీ రిపోర్ట్ వచ్చిందా?
-
-comma, full stop, ellipsis (...) సహజ pauses కోసం ఉపయోగించండి.
-అవసరమైతే hmm..., actually..., basically... వంటి fillers సహజంగా వాడండి.
-
-ప్రొఫెషనల్‌గా, మర్యాదగా, సహజంగా మాట్లాడండి.
+Examples:
+- "సరే sir, నేను సహాయం చేస్తాను"
+- "ఒక్కసారి confirm చేస్తారా?"
+- "అర్థమైంది, ఇప్పుడు next step చెప్తాను"
 """,
 
         "hi-IN": """
-रोज़मर्रा की बातचीत जैसी स्वाभाविक हिंदी में उत्तर दें।
+Speak primarily in natural Hindi with simple English mixed where it feels normal (Hinglish).
 
-एक बार में केवल एक ही प्रश्न पूछें।
-अधिकतम 2 छोटे वाक्य ही रखें।
+Rules:
+- Sound warm, polite, and natural like a real Indian conversation
+- Never sound robotic or overly formal
+- Keep responses short and conversational
+- Ask one question at a time
+- Do not give long paragraph replies
+- Use natural speaking rhythm suitable for voice assistant
+- Confirm important details clearly like age, name, amount, appointment, order ID
+- If the user is confused, explain slowly and simply
+- If interrupted, pause politely and continue naturally
+- Use familiar spoken Hindi, not textbook Hindi
 
-बहुत कठिन शुद्ध हिंदी की ज़रूरत नहीं है।
-रोबोट की तरह नहीं, इंसान की तरह बात करें।
-
-सामान्य बातचीत में जो अंग्रेज़ी शब्द आते हैं
-जैसे:
-ब्रेकफास्ट, मीटिंग, डॉक्टर, अपॉइंटमेंट,
-इंश्योरेंस, पेमेंट, रिपोर्ट, कॉल, मैसेज
-
-उन्हें हिंदी लिपि में ही स्वाभाविक रूप से लिखें।
-
-उदाहरण:
-मैंने ब्रेकफास्ट किया।
-डॉक्टर अपॉइंटमेंट बुक करते हैं।
-क्या आपकी रिपोर्ट आ गई?
-
-comma, full stop, ellipsis (...) pauses के लिए उपयोग करें।
-ज़रूरत हो तो hmm..., actually..., basically... जैसे fillers use करें।
-
-प्रोफेशनल, विनम्र और स्वाभाविक रहें।
+Examples:
+- "Ji bilkul, main madad karta hoon"
+- "Ek baar confirm kar dijiye"
+- "Samajh gaya, ab next step batata hoon"
 """,
 
         "kn-IN": """
-ಪ್ರತಿದಿನ ಜನರು ಹೇಗೆ ಮಾತನಾಡುತ್ತಾರೋ ಹಾಗೆ ಸಹಜವಾದ ಕನ್ನಡದಲ್ಲಿ ಉತ್ತರಿಸಿ।
+Speak primarily in natural Kannada with simple English mixed where commonly used don't'use difficult kannada words .
 
-ಒಮ್ಮೆ ಒಂದು ಪ್ರಶ್ನೆ ಮಾತ್ರ ಕೇಳಿ।
-ಗರಿಷ್ಠ 2 ಚಿಕ್ಕ ವಾಕ್ಯಗಳು ಮಾತ್ರ।
+Rules:
+- Sound natural, warm, and conversational
+- Never sound robotic or too formal
+- Keep responses short and clear
+- Ask one question at a time
+- Avoid long explanations unless necessary
+- Use voice-friendly conversational flow
+- Confirm important details clearly like names, dates, payment details, appointments
+- If customer is confused, explain step by step
+- If interrupted, pause politely and continue naturally
+- Use practical spoken Kannada used in daily life
 
-ತುಂಬಾ ಕಠಿಣ ಶುದ್ಧ ಕನ್ನಡ ಅಗತ್ಯವಿಲ್ಲ।
-ರೋಬೋಟ್ ತರ ಅಲ್ಲ, ಮನುಷ್ಯರಂತೆ ಮಾತನಾಡಿ।
-
-ಸಾಮಾನ್ಯವಾಗಿ ಬಳಸುವ ಇಂಗ್ಲಿಷ್ ಪದಗಳು
-ಉದಾಹರಣೆಗೆ:
-ಬ್ರೇಕ್‌ಫಾಸ್ಟ್, ಮೀಟಿಂಗ್, ಡಾಕ್ಟರ್, ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್,
-ಇನ್ಷುರನ್ಸ್, ಪೇಮೆಂಟ್, ರಿಪೋರ್ಟ್, ಕಾಲ್, ಮೆಸೇಜ್
-
-ಇವುಗಳನ್ನು ಕನ್ನಡ ಲಿಪಿಯಲ್ಲೇ ಸಹಜವಾಗಿ ಬಳಸಿ।
-
-ಉದಾಹರಣೆಗಳು:
-ನಾನು ಬ್ರೇಕ್‌ಫಾಸ್ಟ್ ಮಾಡಿದೆ।
-ಡಾಕ್ಟರ್ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ಬುಕ್ ಮಾಡೋಣ।
-ನಿಮ್ಮ ರಿಪೋರ್ಟ್ ಬಂದಿದೆಯಾ?
-
-comma, full stop, ellipsis (...) pausesಗಾಗಿ ಬಳಸಿ।
-ಬೇಕಾದರೆ hmm..., actually..., basically... fillers ಬಳಸಿ।
-
-ಪ್ರೊಫೆಷನಲ್, ವಿನಯದಿಂದ ಮತ್ತು ಸಹಜವಾಗಿ ಮಾತನಾಡಿ।
+Examples:
+- "ಸರಿ sir, ನಾನು ಸಹಾಯ ಮಾಡುತ್ತೇನೆ"
+- "ಒಮ್ಮೆ confirm ಮಾಡುತ್ತೀರಾ?"
+- "ಅರ್ಥ ಆಯಿತು, ಈಗ next step ಹೇಳುತ್ತೇನೆ"
 """,
 
         "en-IN": """
-Reply in natural conversational English.
+Speak in clear, natural Indian English only.
 
-Ask only one question at a time.
-Maximum 2 short sentences only.
+Important Rules:
+- Respond only in English
+- Do NOT use Hindi words like Arre, Haan, Achha, Bilkul, Ji, Namaste inside normal responses
+- Do NOT switch to Hindi or Hinglish
+- Sound warm, friendly, and professional
+- Use natural Indian customer support English
+- Never sound robotic or scripted
+- Keep responses short and conversational
+- Ask only one question at a time
+- Avoid long paragraph explanations
+- Use natural voice conversation flow
+- Confirm important details clearly like names, policy values, appointment time, order details
+- If the customer is confused, explain simply and clearly
+- If interrupted, pause politely and continue naturally
+- Never sound too western or too formal
+- Speak like a professional Indian voice support executive using English only
 
-Speak like a real human, not like a robot.
-Keep replies short, clear, and natural.
-
-Use commas, full stops, and occasional ellipsis (...)
-for natural speaking pauses.
-
-Use fillers naturally when needed:
-hmm..., actually..., basically..., I mean...
-
-Avoid long formal sentences.
-Avoid robotic responses.
-
-Be professional, polite, and natural.
+Examples:
+"Sure, I will help you with that."
+"Can you confirm that once please?"
+"Understood, let me explain the next step."
+"I understand your concern."
 """
     }
 
-    return rules.get(lang, rules["en-IN"])
+    return rules.get(
+        lang,
+        rules["en-IN"]
+    )

@@ -26,24 +26,72 @@ export default function Zeva() {
   };
 
   const handleSubmit = async () => {
-    try {
-      setLoading(true);
+  try {
+    // =========================
+    // VALIDATION
+    // =========================
 
-      const data = await createLead(form);
-
-      if (!data.success) {
-        throw new Error("Failed to create lead");
-      }
-
-      localStorage.setItem("lead_id", data.id);
-      router.push("/demo-call");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to submit requirement");
-    } finally {
-      setLoading(false);
+    if (!form.name.trim()) {
+      alert("Name is required");
+      return;
     }
-  };
+
+    if (!form.phone.trim()) {
+      alert("Phone number is required");
+      return;
+    }
+
+    if (!/^[6-9]\d{9}$/.test(form.phone.trim())) {
+      alert("Enter valid 10-digit phone number");
+      return;
+    }
+
+    if (!form.email.trim()) {
+      alert("Email is required");
+      return;
+    }
+
+    if (
+      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(
+        form.email.trim()
+      )
+    ) {
+      alert("Enter valid email address");
+      return;
+    }
+
+    // optional
+    if (!form.company.trim()) {
+      alert("Company name is required");
+      return;
+    }
+
+    setLoading(true);
+
+    const payload = {
+      name: form.name.trim(),
+      company: form.company.trim(),
+      phone: form.phone.trim(),
+      email: form.email.trim(),
+      requirement: form.requirement.trim(),
+    };
+
+    const data = await createLead(payload);
+
+    if (!data.success) {
+      throw new Error("Failed to create lead");
+    }
+
+    localStorage.setItem("lead_id", data.id);
+
+    router.push("/demo-call");
+  } catch (error) {
+    console.error(error);
+    alert("Failed to submit requirement");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <section
@@ -115,6 +163,7 @@ export default function Zeva() {
         <div className="d-flex flex-column gap-3">
           <input
             type="text"
+            required
             placeholder="Enter your full name"
             value={form.name}
             onChange={(e) => handleChange("name", e.target.value)}
@@ -123,6 +172,7 @@ export default function Zeva() {
 
           <input
             type="text"
+            
             placeholder="Your company name"
             value={form.company}
             onChange={(e) => handleChange("company", e.target.value)}
@@ -131,6 +181,7 @@ export default function Zeva() {
 
           <input
             type="text"
+            required
             placeholder="+91 00000 00000"
             value={form.phone}
             onChange={(e) => handleChange("phone", e.target.value)}
@@ -139,6 +190,7 @@ export default function Zeva() {
 
           <input
             type="email"
+            required
             placeholder="you@example.com"
             value={form.email}
             onChange={(e) => handleChange("email", e.target.value)}

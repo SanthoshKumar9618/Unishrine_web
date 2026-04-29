@@ -6,6 +6,7 @@ import {
   ASSISTANT_PROMPTS,
   AssistantType,
 } from "@/lib/config/assistant-prompts";
+import styles from "./page.module.scss";
 
 type Status =
   | "idle"
@@ -20,11 +21,8 @@ type Message = {
   content: string;
 };
 
-
-
 type VoiceType = "male_1" | "female_1" | "female_2";
 type LanguageType = "English" | "Telugu" | "Hindi" | "Kannada";
-
 
 function formatTime(seconds: number) {
   const mins = String(Math.floor(seconds / 60)).padStart(2, "0");
@@ -46,9 +44,9 @@ export default function DemoCallPage() {
     useState<AssistantType>("insurance_advisor");
 
   const prompt = useMemo(
-  () => ASSISTANT_PROMPTS[assistantType],
-  [assistantType]
-);
+    () => ASSISTANT_PROMPTS[assistantType],
+    [assistantType]
+  );
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -120,115 +118,38 @@ export default function DemoCallPage() {
   };
 
   const handleEnd = () => {
-  apiRef.current?.stop();
-  setStatus("ended");
+    apiRef.current?.stop();
+    setStatus("ended");
 
-  localStorage.setItem(
-    "call_transcript",
-    JSON.stringify(messages)
-  );
+    localStorage.setItem(
+      "call_transcript",
+      JSON.stringify(messages)
+    );
 
-  localStorage.setItem(
-    "call_duration",
-    String(duration)
-  );
+    localStorage.setItem(
+      "call_duration",
+      String(duration)
+    );
 
-  window.location.href = "/call-summary";
-};
+    window.location.href = "/call-summary";
+  };
 
   return (
-    <section
-      style={{
-        minHeight: "100vh",
-        background: "#ffffff",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "40px 20px",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "1320px",
-          display: "flex",
-          gap: "36px",
-          flexWrap: "wrap",
-          justifyContent: "center",
-        }}
-      >
-        {/* LEFT PANEL */}
-        <div
-          style={{
-            width: "380px",
-            minHeight: "700px",
-            background: "#17253d",
-            borderRadius: "36px",
-            padding: "40px 30px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
-          }}
-        >
-          <div
-            style={{
-              width: "220px",
-              height: "220px",
-              borderRadius: "50%",
-              background:
-                "linear-gradient(135deg, #f8d7ff 0%, #f8b86d 55%, #f97316 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "54px",
-              color: "black",
-              fontWeight: 700,
-              boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
-            }}
-          >
-            ✦
-          </div>
+    <section className={styles.wrapper}>
+      <div className={styles.container}>
+        <div className={styles.leftPanel}>
+          <div className={styles.avatar}>✦</div>
 
-          <p
-            style={{
-              marginTop: "32px",
-              marginBottom: "10px",
-              color: "#ffffff",
-              fontSize: "30px",
-              fontWeight: 600,
-              textTransform: "capitalize",
-            }}
-          >
-            {status}
-          </p>
+          <p className={styles.status}>{status}</p>
+          <p className={styles.timer}>{formatTime(duration)}</p>
 
-          <p
-            style={{
-              marginTop: 0,
-              color: "#d1d5db",
-              fontSize: "24px",
-            }}
-          >
-            {formatTime(duration)}
-          </p>
-
-          <div
-            style={{
-              display: "flex",
-              gap: "6px",
-              marginTop: "10px",
-              marginBottom: "32px",
-            }}
-          >
+          <div className={styles.wave}>
             {Array.from({ length: 16 }).map((_, i) => (
               <div
                 key={i}
+                className={styles.waveBar}
                 style={{
-                  width: "4px",
-                  height: `${10 + (i % 5) * 8}px`,
-                  borderRadius: "999px",
-                  background: "#ffffff",
+                  height: `${10 + (i % 5) * 6}px`,
                 }}
               />
             ))}
@@ -236,186 +157,109 @@ export default function DemoCallPage() {
 
           <select
             value={voice}
-            onChange={(e) => setVoice(e.target.value as VoiceType)}
-            style={{
-              width: "100%",
-              padding: "16px",
-              borderRadius: "18px",
-              border: "1px solid rgba(255,255,255,0.2)",
-              background: "rgba(255,255,255,0.08)",
-              color: "black",
-              fontSize: "15px",
-              outline: "none",
-            }}
+            onChange={(e) =>
+              setVoice(e.target.value as VoiceType)
+            }
+            className={styles.selectBox}
           >
             <option value="male_1">Male Voice 1</option>
             <option value="female_1">Female Voice 1</option>
             <option value="female_2">Female Voice 2</option>
           </select>
 
-          <div
-            style={{
-              display: "flex",
-              gap: "24px",
-              marginTop: "42px",
-            }}
-          >
+          <div className={styles.callActions}>
             <button
               onClick={connect}
-              style={{
-                width: "74px",
-                height: "74px",
-                borderRadius: "50%",
-                border: "none",
-                background: "#22c55e",
-                color: "white",
-                fontSize: "28px",
-                cursor: "pointer",
-              }}
+              className={styles.callBtn}
             >
               📞
             </button>
 
             <button
               onClick={handleEnd}
-              style={{
-                width: "74px",
-                height: "74px",
-                borderRadius: "50%",
-                border: "none",
-                background: "#ef4444",
-                color: "white",
-                fontSize: "28px",
-                cursor: "pointer",
-              }}
+              className={styles.endBtn}
             >
               ✕
             </button>
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
-        <div
-          style={{
-            flex: 1,
-            minWidth: "700px",
-            minHeight: "700px",
-            background: "#ffffff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "32px",
-            overflow: "hidden",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.04)",
-          }}
-        >
-          <div
-            style={{
-              padding: "28px 32px",
-              borderBottom: "1px solid #e5e7eb",
-              fontSize: "24px",
-              fontWeight: 600,
-              color: "#111827",
-            }}
-          >
+        <div className={styles.rightPanel}>
+          <div className={styles.header}>
             Conversation
           </div>
 
-          <div style={{ padding: "32px" }}>
-            <div
-              style={{
-                background: "#f9fafb",
-                borderRadius: "24px",
-                padding: "28px",
-                lineHeight: 1.8,
-                color: "#374151",
-                fontSize: "15px",
-                marginBottom: "28px",
-              }}
-            >
+          <div className={styles.content}>
+            <div className={styles.promptBox}>
               {prompt}
             </div>
 
-            <div
-              style={{
-                height: "320px",
-                overflowY: "auto",
-                border: "1px solid #eef2f7",
-                borderRadius: "24px",
-                padding: "24px",
-                marginBottom: "28px",
-              }}
-            >
-              {messages.length === 0 ? (
-                <p style={{ color: "#9ca3af" }}>
-                  Click the green call button to start conversation
-                </p>
-              ) : (
-                messages.map((msg, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: "flex",
-                      justifyContent:
-                        msg.role === "user" ? "flex-end" : "flex-start",
-                      marginBottom: "14px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        maxWidth: "75%",
-                        padding: "12px 16px",
-                        borderRadius: "16px",
-                        background:
-                          msg.role === "user" ? "#dbeafe" : "#f3f4f6",
-                        fontSize: "14px",
-                        lineHeight: 1.7,
-                      }}
-                    >
-                      {msg.content}
-                    </div>
-                  </div>
-                ))
-              )}
+            <div className={styles.messageBox}>
+  {messages.length === 0 ? (
+    <p className={styles.emptyText}>
+      Click the green call button to start conversation
+    </p>
+  ) : (
+    messages.map((msg, i) => (
+      <div
+        key={i}
+        className={
+          msg.role === "user"
+            ? styles.userRow
+            : styles.assistantRow
+        }
+      >
+        <div
+          className={
+            msg.role === "user"
+              ? styles.userBubble
+              : styles.assistantBubble
+          }
+        >
+          <div className={styles.messageLabel}>
+            {msg.role === "user"
+              ? "YOU"
+              : "ASSISTANT"}
+          </div>
 
-              <div ref={messagesEndRef} />
-            </div>
+          <div>{msg.content}</div>
+        </div>
+      </div>
+    ))
+  )}
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "20px",
-              }}
-            >
+  <div ref={messagesEndRef} />
+</div>
+
+            <div className={styles.bottomControls}>
               <select
                 value={assistantType}
                 onChange={(e) =>
-                  setAssistantType(e.target.value as AssistantType)
+                  setAssistantType(
+                    e.target.value as AssistantType
+                  )
                 }
-                style={{
-                  padding: "16px",
-                  borderRadius: "18px",
-                  border: "1px solid #d1d5db",
-                  fontSize: "15px",
-                  outline: "none",
-                }}
+                className={styles.selectBox}
               >
-                <option value="clinic_receptionist">Clinic Receptionist</option>
-                <option value="insurance_advisor">Insurance Advisor</option>
-                <option value="ecommerce_support">E-commerce Support</option>
+                <option value="clinic_receptionist">
+                  Clinic Receptionist
+                </option>
+                <option value="insurance_advisor">
+                  Insurance Advisor
+                </option>
+                <option value="ecommerce_support">
+                  E-commerce Support
+                </option>
               </select>
 
               <select
                 value={language}
                 onChange={(e) =>
-                  setLanguage(e.target.value as LanguageType)
+                  setLanguage(
+                    e.target.value as LanguageType
+                  )
                 }
-                style={{
-                  padding: "16px",
-                  borderRadius: "18px",
-                  border: "1px solid #d1d5db",
-                  fontSize: "15px",
-                  outline: "none",
-                }}
+                className={styles.selectBox}
               >
                 <option value="English">English</option>
                 <option value="Telugu">Telugu</option>

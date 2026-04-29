@@ -1,3 +1,5 @@
+# src/infrastructure/providers/tts/sarvam_tts_provider.py
+
 import requests
 import base64
 from typing import AsyncGenerator
@@ -9,12 +11,13 @@ class SarvamTTSProvider:
         self.url = "https://api.sarvam.ai/text-to-speech"
         self.api_key = settings.SARVAM_API_KEY
 
-        # frontend voice → sarvam speaker mapping
+        # frontend voice -> Sarvam speaker mapping
+        # KEEP THIS AS-IS (this is correct)
         self.voice_map = {
-                "male_1": "abhilash",
-                "female_1": "vidya",
-                "female_2": "manisha",
-            }
+            "male_1": "abhilash",
+            "female_1": "vidya",
+            "female_2": "manisha",
+        }
 
     async def stream(
         self,
@@ -26,7 +29,7 @@ class SarvamTTSProvider:
         if not text or not str(text).strip():
             return
 
-        # map frontend selected voice to Sarvam speaker
+        # frontend selected voice -> actual Sarvam speaker
         selected_speaker = self.voice_map.get(
             voice,
             "vidya"

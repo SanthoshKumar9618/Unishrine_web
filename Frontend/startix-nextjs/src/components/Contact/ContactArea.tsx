@@ -14,8 +14,8 @@ export default function ContactArea() {
 
                 <div className="contact-sm-card">
                   <h4 className="mb-3">Address</h4>
-                  <p>4th block, Palm Arcade, No 513/C, 1st Floor, 
-                    HBR Layout, 1st Stage, Hennur Gardens, Bengaluru, Karnataka 560043</p>
+                  <p> Dex Co Work, Palm Arcade, No 513/C, 1st Floor, 4th block
+                    HBR Layout 1st Stage, Bengaluru - 560043</p>
                 </div>
 
                 <hr />
