@@ -1,0 +1,27 @@
+# ENV
+.env
+.env.*
+!.env.example
+
+# PYTHON
+.venv/
+__pycache__/
+*.pyc
+
+# NODE
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# BINARIES
+*.exe
+*.dll
+*.so
+
+# FFMPEG
+ffmpeg*
+
+# LOGS
+*.log

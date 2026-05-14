@@ -1,0 +1,149 @@
+@import "../../public/assets/css/bootstrap.min.css"; 
+@import "../../public/assets/css/flaticon.css";
+@import "../../public/assets/css/tabler-icons.min.css";
+@import "../../public/assets/scss/styles.scss"; 
+
+
+.footer-contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0 0;
+}
+
+.footer-contact-list li {
+  color: #ffffff !important;
+  font-size: 18px;
+  margin-bottom: 14px;
+  font-weight: 500;
+  opacity: 1 !important;
+}
+
+.footer-contact-list li::marker {
+  color: #ffffff;
+}
+
+.custom-feature-card {
+  background: #ffffff !important;
+  border: none !important;
+  border-radius: 20px !important;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.35s ease !important;
+  transform: translateY(0);
+}
+
+.custom-feature-card:hover {
+  transform: translateY(-10px) scale(1.01) !important;
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.14) !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Remove theme blue hover border completely */
+.custom-feature-card::before,
+.custom-feature-card::after {
+  display: none !important;
+  content: none !important;
+}
+
+.custom-feature-card:hover::before,
+.custom-feature-card:hover::after {
+  display: none !important;
+  content: none !important;
+}
+
+.feature-area {
+  margin-bottom: 0 !important;
+  padding-bottom: 60px !important;
+}
+
+/* Ensure footer sticks properly */
+.feature-area + .footer-section {
+  margin-top: 0 !important;
+}
+
+#services {
+  scroll-margin-top: 100px; // adjust based on header height
+}
+
+/* ================================
+   ABOUT STORY SECTION (FINAL)
+================================ */
+
+.story-section {
+  padding: 80px 0;
+}
+
+.story-images-wrapper {
+  margin-top: 65px;
+
+  @media (max-width: 991.98px) {
+    margin-top: 20px;
+  }
+}
+
+.story-images {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.story-img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  border-radius: 16px;
+
+  /* SaaS polish */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  @media (max-width: 768px) {
+    height: 200px;
+  }
+}
+
+
+/* Our Solutions Cards - Remove Blue Shadow + Add Premium 3D Shadow */
+
+.homepage-card {
+  background: #ffffff !important;
+  border: none !important;
+  border-radius: 20px !important;
+  overflow: hidden;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.35s ease !important;
+  transform: translateY(0);
+  position: relative;
+}
+
+/* Hover Effect */
+.homepage-card:hover {
+  transform: translateY(-10px) scale(1.01) !important;
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.14) !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Remove Template Blue Border / Glow */
+.homepage-card::before,
+.homepage-card::after {
+  display: none !important;
+  content: none !important;
+}
+
+.homepage-card:hover::before,
+.homepage-card:hover::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Optional: smoother image corners */
+.homepage-card img {
+  border-radius: 20px !important;
+}
