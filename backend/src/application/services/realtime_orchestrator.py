@@ -26,6 +26,7 @@ class RealtimeOrchestrator:
         self.pending_user_text = ""
         self.pause_task: Optional[asyncio.Task] = None
         self.conversation_history = []
+        self.tts_lock = asyncio.Lock()
         # Human-like pause settings
         self.reply_delay_seconds = 2
         self.min_text_length = 3
@@ -248,7 +249,7 @@ class RealtimeOrchestrator:
         try:
             print("[WAITING 2 SEC BEFORE REPLY]")
 
-            await asyncio.sleep(2)
+            await asyncio.sleep(0.15)
 
             if not self.pending_user_text:
                 return
@@ -369,24 +370,25 @@ class RealtimeOrchestrator:
     # TTS STREAM
     # =====================================
     async def _run_tts(self, text: str, lang: str):
-        self.is_speaking = True
-        print("[TTS START]")
 
-        try:
-            async for audio in self.tts.stream(
-                text,
-                language=lang,
-                voice=self.selected_voice,
-            ):
-                await self.ws.send_bytes(audio)
+        async with self.tts_lock:
 
-            print("[TTS COMPLETED]")
+            self.is_speaking = True
 
-        except asyncio.CancelledError:
-            print("[TTS CANCELLED]")
+            try:
+                async for audio in self.tts.stream(
+                    text,
+                    language=lang,
+                    voice=self.selected_voice,
+                ):
 
-        finally:
-            self.is_speaking = False
+                    await self.ws.send_bytes(audio)
+
+            except asyncio.CancelledError:
+                print("[TTS CANCELLED]")
+
+            finally:
+                self.is_speaking = False
 
     # =====================================
     # CLEAN SHUTDOWN
