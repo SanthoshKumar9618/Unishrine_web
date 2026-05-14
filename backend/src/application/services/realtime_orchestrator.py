@@ -142,12 +142,11 @@ class RealtimeOrchestrator:
         await self.initialize_session()
 
         # STEP 2 → first assistant greeting
-        await self._send_greeting()
-
-        # STEP 3 → start STT loop
         stt_task = asyncio.create_task(
             self._run_stt()
         )
+
+        await self._send_greeting()
 
         try:
             await asyncio.Future()  # keep alive
@@ -326,7 +325,10 @@ class RealtimeOrchestrator:
                 })
 
                 # sentence boundary detection
-                if token in [".", "?", "!", "\n"]:
+                if (
+                    token in [".", "?", "!", ",", "\n"]
+                    or len(sentence_buffer.split()) >= 8
+                ):
 
                     chunk = sentence_buffer.strip()
 
@@ -370,8 +372,6 @@ class RealtimeOrchestrator:
     # TTS STREAM
     # =====================================
     async def _run_tts(self, text: str, lang: str):
-
-        async with self.tts_lock:
 
             self.is_speaking = True
 
