@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: zeva-backend
+Version: 0.0.0
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: sqlalchemy>=2.0
+Requires-Dist: asyncpg
+Requires-Dist: alembic
+Requires-Dist: psycopg2-binary
+Requires-Dist: pydantic
+Requires-Dist: python-dotenv
+Requires-Dist: redis
+Requires-Dist: pybreaker
+Requires-Dist: passlib[bcrypt]==1.7.4
+Requires-Dist: bcrypt==3.2.2
