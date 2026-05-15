@@ -253,7 +253,7 @@ class RealtimeOrchestrator:
         try:
             print("[WAITING 2 SEC BEFORE REPLY]")
 
-            await asyncio.sleep(0.15)
+            await asyncio.sleep(0.3)
 
             if not self.pending_user_text:
                 return
@@ -331,7 +331,7 @@ class RealtimeOrchestrator:
                 words = rolling_buffer.split()
 
                 # start TTS only after natural phrase size
-                if len(words) >= 18 and not tts_started:
+                if len(words) >= 40 and not tts_started:
 
                     tts_started = True
 
@@ -343,16 +343,6 @@ class RealtimeOrchestrator:
 
                     rolling_buffer = ""
 
-                # continue with larger rolling chunks
-                elif len(words) >= 25:
-
-                    chunk = rolling_buffer.strip()
-
-                    await self.tts_queue.put(
-                        (chunk, lang)
-                    )
-
-                    rolling_buffer = ""
 
             # remaining text
             if rolling_buffer.strip():
