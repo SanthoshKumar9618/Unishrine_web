@@ -31,7 +31,7 @@ class RealtimeOrchestrator:
         self.tts_queue = asyncio.Queue()
         self.current_tts_task = None
         # Human-like pause settings
-        self.reply_delay_seconds = 2
+        
         self.min_text_length = 3
 
         self.llm_task: Optional[asyncio.Task] = None
