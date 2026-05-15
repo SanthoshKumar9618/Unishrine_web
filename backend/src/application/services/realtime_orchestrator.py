@@ -1,5 +1,4 @@
 import asyncio
-import token
 from typing import Optional
 from src.domain.config.language_rules import get_language_instruction
 from src.domain.config.greetings import  get_dynamic_greeting
@@ -27,8 +26,8 @@ class RealtimeOrchestrator:
         self.pending_user_text = ""
         self.pause_task: Optional[asyncio.Task] = None
         self.conversation_history = []
-       
-       
+        self.tts_queue = asyncio.Queue()
+        self.current_tts_task = None
         # Human-like pause settings
         self.reply_delay_seconds = 2
         self.min_text_length = 3
@@ -130,8 +129,8 @@ class RealtimeOrchestrator:
         })
 
         # convert greeting text -> voice audio
-        self.tts_task = asyncio.create_task(
-            self._run_tts(
+        await self.tts_queue.put(
+            (
                 greeting,
                 self.current_language,
             )
@@ -349,8 +348,8 @@ class RealtimeOrchestrator:
 
                     chunk = rolling_buffer.strip()
 
-                    self.tts_task = asyncio.create_task(
-                        self._run_tts(chunk, lang)
+                    await self.tts_queue.put(
+                        (chunk, lang)
                     )
 
                     rolling_buffer = ""
@@ -358,12 +357,12 @@ class RealtimeOrchestrator:
             # remaining text
             if rolling_buffer.strip():
 
-                self.tts_task = asyncio.create_task(
-                    self._run_tts(
-                        rolling_buffer.strip(),
-                        lang
-                    )
+                await self.tts_queue.put(
+                (
+                    rolling_buffer.strip(),
+                    lang
                 )
+            )
 
             print("[LLM DONE]:", full_text)
 
