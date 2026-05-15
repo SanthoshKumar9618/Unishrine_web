@@ -1,4 +1,6 @@
 import asyncio
+import time
+
 from typing import Optional
 from src.domain.config.language_rules import get_language_instruction
 from src.domain.config.greetings import  get_dynamic_greeting
@@ -385,22 +387,34 @@ class RealtimeOrchestrator:
     # =====================================
     async def _run_tts(self, text: str, lang: str):
 
-            self.is_speaking = True
 
-            try:
-                async for audio in self.tts.stream(
-                    text,
-                    language=lang,
-                    voice=self.selected_voice,
-                ):
+        self.is_speaking = True
 
-                    await self.ws.send_bytes(audio)
+        start = time.time()
+        first_chunk = True
 
-            except asyncio.CancelledError:
-                print("[TTS CANCELLED]")
+        try:
 
-            finally:
-                self.is_speaking = False
+            async for audio in self.tts.stream(
+                text,
+                language=lang,
+                voice=self.selected_voice,
+            ):
+
+                if first_chunk:
+                    print(
+                        "[FIRST AUDIO LATENCY]:",
+                        time.time() - start
+                    )
+                    first_chunk = False
+
+                await self.ws.send_bytes(audio)
+
+        except asyncio.CancelledError:
+            print("[TTS CANCELLED]")
+
+        finally:
+            self.is_speaking = False
 
     # =====================================
     # CLEAN SHUTDOWN
