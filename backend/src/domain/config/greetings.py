@@ -29,81 +29,73 @@ def _build_greeting_map(
     gender_words: dict,
 ):
     return {
+
         "clinic_receptionist": {
+
             "en-IN": (
-                f"Namaste! This is {voice_name} {gender_words['en-IN']} "
-                f"from CarePlus Clinic. I can help you with appointment booking. "
-                f"May I know your preferred doctor and your name?"
+                f"Namaste! I'm {voice_name} from CarePlus Clinic. "
+                f"How can I help you today?"
             ),
 
             "hi-IN": (
-                f"नमस्ते! मैं {voice_name} {gender_words['hi-IN']} "
-                f"CarePlus Clinic से। मैं आपकी appointment booking में मदद कर सकता हूँ। "
-                f"कृपया अपना नाम और पसंदीदा doctor बताइए।"
+                f"नमस्ते! मैं {voice_name} CarePlus Clinic से। "
+                f"मैं आपकी कैसे मदद कर सकती हूँ?"
             ),
 
             "te-IN": (
-                f"నమస్కారం! నేను {voice_name} {gender_words['te-IN']} "
-                f"CarePlus Clinic నుండి. మీ appointment booking లో సహాయం చేస్తాను. "
-                f"మీ పేరు మరియు కావలసిన doctor పేరు చెప్పండి."
+                f"నమస్కారం! నేను {voice_name}, CarePlus Clinic నుండి. "
+                f"నేను మీకు ఎలా సహాయం చేయగలను?"
             ),
 
             "kn-IN": (
-                f"ನಮಸ್ಕಾರ! ನಾನು {voice_name} {gender_words['kn-IN']} "
-                f"CarePlus Clinic ಇಂದ. ನಿಮ್ಮ appointment booking ನಲ್ಲಿ ಸಹಾಯ ಮಾಡುತ್ತೇನೆ. "
-                f"ದಯವಿಟ್ಟು ನಿಮ್ಮ ಹೆಸರು ಮತ್ತು ಬೇಕಾದ doctor ಹೆಸರನ್ನು ತಿಳಿಸಿ."
+                f"ನಮಸ್ಕಾರ! ನಾನು {voice_name}, CarePlus Clinic ಇಂದ. "
+                f"ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಹುದು?"
             ),
         },
 
         "insurance_advisor": {
+
             "en-IN": (
-                f"Namaste! This is {voice_name} {gender_words['en-IN']} "
-                f"from Bharat Insurance Group. I can help you choose the right insurance plan. "
-                f"May I know your age and family coverage needs?"
+                f"Namaste! I'm {voice_name} from Insurance group. "
+                f"What kind of insurance are you looking for?"
             ),
 
             "hi-IN": (
-                f"नमस्ते! मैं {voice_name} {gender_words['hi-IN']} "
-                f"Bharat Insurance Group से। मैं सही insurance plan चुनने में मदद कर सकता हूँ। "
-                f"कृपया अपनी उम्र और family coverage needs बताइए।"
+                f"नमस्ते! मैं {voice_name}, Insurance group से। "
+                f"आप किस प्रकार का insurance ढूंढ रहे हैं?"
             ),
 
             "te-IN": (
-                f"నమస్కారం! నేను {voice_name} {gender_words['te-IN']} "
-                f"Bharat Insurance Group నుండి. సరైన insurance plan ఎంపికలో సహాయం చేస్తాను. "
-                f"మీ వయస్సు మరియు family coverage అవసరాలు చెప్పండి."
+                f"నమస్కారం! నేను {voice_name}, Insurance group నుండి. "
+                f"మీకు ఏ insurance కావాలి?"
             ),
 
             "kn-IN": (
-                f"ನಮಸ್ಕಾರ! ನಾನು {voice_name} {gender_words['kn-IN']} "
-                f"Bharat Insurance Group ಇಂದ. ಸರಿಯಾದ insurance plan ಆಯ್ಕೆ ಮಾಡಲು ಸಹಾಯ ಮಾಡುತ್ತೇನೆ. "
-                f"ನಿಮ್ಮ ವಯಸ್ಸು ಮತ್ತು family coverage ಅಗತ್ಯಗಳನ್ನು ತಿಳಿಸಿ."
+                f"ನಮಸ್ಕಾರ! ನಾನು {voice_name}, Insurance group ಇಂದ. "
+                f"ನಿಮಗೆ ಯಾವ insurance ಬೇಕು?"
             ),
         },
 
         "ecommerce_support": {
+
             "en-IN": (
-                f"Namaste! This is {voice_name} {gender_words['en-IN']} "
-                f"from ShopEasy India. I can help with your order, refund, or delivery issue. "
-                f"Please share your order details."
+                f"Hello! I'm {voice_name} from ShopEasy India. "
+                f"How can I help with your order?"
             ),
 
             "hi-IN": (
-                f"नमस्ते! मैं {voice_name} {gender_words['hi-IN']} "
-                f"ShopEasy India से। मैं आपके order, refund, या delivery issue में मदद कर सकता हूँ। "
-                f"कृपया अपने order details बताइए।"
+                f"नमस्ते! मैं {voice_name}, ShopEasy India से। "
+                f"मैं आपके order में कैसे मदद कर सकती हूँ?"
             ),
 
             "te-IN": (
-                f"నమస్కారం! నేను {voice_name} {gender_words['te-IN']} "
-                f"ShopEasy India నుండి. మీ order, refund లేదా delivery సమస్యలో సహాయం చేస్తాను. "
-                f"దయచేసి మీ order వివరాలు చెప్పండి."
+                f"నమస్కారం! నేను {voice_name}, ShopEasy India నుండి. "
+                f"మీ order గురించి ఎలా సహాయం చేయగలను?"
             ),
 
             "kn-IN": (
-                f"ನಮಸ್ಕಾರ! ನಾನು {voice_name} {gender_words['kn-IN']} "
-                f"ShopEasy India ಇಂದ. ನಿಮ್ಮ order, refund ಅಥವಾ delivery ಸಮಸ್ಯೆಯಲ್ಲಿ ಸಹಾಯ ಮಾಡುತ್ತೇನೆ. "
-                f"ದಯವಿಟ್ಟು ನಿಮ್ಮ order ವಿವರಗಳನ್ನು ತಿಳಿಸಿ."
+                f"ನಮಸ್ಕಾರ! ನಾನು {voice_name}, ShopEasy India ಇಂದ. "
+                f"ನಿಮ್ಮ order ಬಗ್ಗೆ ನಾನು ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಹುದು?"
             ),
         },
     }
