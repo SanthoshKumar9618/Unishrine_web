@@ -370,6 +370,11 @@ class RealtimeOrchestrator:
             self.conversation_history.append(
                 f"Assistant: {full_text}"
             )
+            # final completed assistant message
+            await self.ws.send_json({
+                "type": "assistant",
+                "text": full_text,
+            })
 
         except asyncio.CancelledError:
             print("[LLM CANCELLED]")
