@@ -1,4 +1,5 @@
 import asyncio
+import token
 from typing import Optional
 from src.domain.config.language_rules import get_language_instruction
 from src.domain.config.greetings import  get_dynamic_greeting
@@ -26,7 +27,8 @@ class RealtimeOrchestrator:
         self.pending_user_text = ""
         self.pause_task: Optional[asyncio.Task] = None
         self.conversation_history = []
-        self.tts_lock = asyncio.Lock()
+       
+       
         # Human-like pause settings
         self.reply_delay_seconds = 2
         self.min_text_length = 3
@@ -148,6 +150,10 @@ class RealtimeOrchestrator:
 
         await self._send_greeting()
 
+        tts_worker = asyncio.create_task(
+            self._tts_worker()
+        )
+
         try:
             await asyncio.Future()  # keep alive
 
@@ -268,21 +274,21 @@ class RealtimeOrchestrator:
         except asyncio.CancelledError:
             print("[USER CONTINUED SPEAKING]")
        
-        
-    
 
     # =====================================
     # LLM STREAM
     # =====================================
     async def _run_llm(self, text: str, lang: str):
+
         print("[LLM START]")
 
         full_text = ""
-        sentence_buffer = ""
+        rolling_buffer = ""
 
         language_instruction = get_language_instruction(lang)
 
         try:
+
             recent_history = "\n".join(
                 self.conversation_history[-6:]
             )
@@ -301,54 +307,60 @@ class RealtimeOrchestrator:
     {text}
 
     IMPORTANT:
-    - Do not repeat already answered questions
-    - Continue naturally from previous context
-    - Ask only the next required question
-    - Never assume user details that were not explicitly provided
-    - If information is missing, politely ask for clarification
-    - If the user has not shared their name, do not use any name
-    - Do not guess customer information
-    - Only use facts explicitly stated by the user
+    - Keep responses short and conversational
+    - Avoid repeating greetings
+    - Speak naturally like a human agent
+    - Ask only one question at a time
+    - Keep replies under 25 words when possible
 
     ASSISTANT RESPONSE:
     """
 
+            tts_started = False
+
             async for token in self.llm.stream(prompt):
 
                 full_text += token
-                sentence_buffer += token
+                rolling_buffer += token
 
-                # realtime UI streaming
+                # realtime UI text
                 await self.ws.send_json({
                     "type": "assistant_stream",
                     "text": token,
                 })
 
-                # sentence boundary detection
-                if (
-                    token in [".", "?", "!", ",", "\n"]
-                    or len(sentence_buffer.split()) >= 8
-                ):
+                words = rolling_buffer.split()
 
-                    chunk = sentence_buffer.strip()
+                # start TTS only after natural phrase size
+                if len(words) >= 18 and not tts_started:
 
-                    if chunk:
+                    tts_started = True
 
-                        print("[TTS CHUNK]:", chunk)
+                    chunk = rolling_buffer.strip()
 
-                        # start speaking immediately
-                        asyncio.create_task(
-                            self._run_tts(chunk, lang)
-                        )
+                    self.tts_task = asyncio.create_task(
+                        self._run_tts(chunk, lang)
+                    )
 
-                    sentence_buffer = ""
+                    rolling_buffer = ""
 
-            # remaining partial text
-            if sentence_buffer.strip():
+                # continue with larger rolling chunks
+                elif len(words) >= 25:
 
-                asyncio.create_task(
+                    chunk = rolling_buffer.strip()
+
+                    self.tts_task = asyncio.create_task(
+                        self._run_tts(chunk, lang)
+                    )
+
+                    rolling_buffer = ""
+
+            # remaining text
+            if rolling_buffer.strip():
+
+                self.tts_task = asyncio.create_task(
                     self._run_tts(
-                        sentence_buffer.strip(),
+                        rolling_buffer.strip(),
                         lang
                     )
                 )
@@ -359,14 +371,20 @@ class RealtimeOrchestrator:
                 f"Assistant: {full_text}"
             )
 
-            # final complete response
-            await self.ws.send_json({
-                "type": "assistant",
-                "text": full_text,
-            })
-
         except asyncio.CancelledError:
             print("[LLM CANCELLED]")
+    
+    async def _tts_worker(self):
+
+        while True:
+
+            text, lang = await self.tts_queue.get()
+
+            try:
+                await self._run_tts(text, lang)
+
+            except Exception as e:
+                print("[TTS WORKER ERROR]", e)
 
     # =====================================
     # TTS STREAM
