@@ -32,7 +32,7 @@ class RealtimeOrchestrator:
         self.current_tts_task = None
         # Human-like pause settings
         
-        self.min_text_length = 3
+        self.min_text_length = 2
 
         self.llm_task: Optional[asyncio.Task] = None
         self.tts_task: Optional[asyncio.Task] = None
@@ -149,11 +149,11 @@ class RealtimeOrchestrator:
             self._run_stt()
         )
 
-        await self._send_greeting()
-
         tts_worker = asyncio.create_task(
-            self._tts_worker()
-        )
+                self._tts_worker()
+            )
+
+        await self._send_greeting()
 
         try:
             await asyncio.Future()  # keep alive
@@ -221,11 +221,14 @@ class RealtimeOrchestrator:
                 pass
 
         # cancel old TTS immediately
-        if self.tts_task and not self.tts_task.done():
+        if (
+    self.current_tts_task
+    and not self.current_tts_task.done()
+):
             print("[TTS INTERRUPTED]")
-            self.tts_task.cancel()
+            self.current_tts_task.cancel()
             try:
-                await self.tts_task
+                await self.current_tts_task
             except:
                 pass
 
@@ -339,8 +342,11 @@ class RealtimeOrchestrator:
 
                     chunk = rolling_buffer.strip()
 
-                    self.tts_task = asyncio.create_task(
-                        self._run_tts(chunk, lang)
+                    await self.tts_queue.put(
+                        (
+                            chunk,
+                            lang
+                        )
                     )
 
                     rolling_buffer = ""
@@ -376,11 +382,26 @@ class RealtimeOrchestrator:
 
             text, lang = await self.tts_queue.get()
 
-            try:
-                await self._run_tts(text, lang)
+            # cancel previous speech
+            if (
+                self.current_tts_task
+                and not self.current_tts_task.done()
+            ):
+                self.current_tts_task.cancel()
 
-            except Exception as e:
-                print("[TTS WORKER ERROR]", e)
+                try:
+                    await self.current_tts_task
+                except:
+                    pass
+
+            self.current_tts_task = asyncio.create_task(
+                self._run_tts(text, lang)
+            )
+
+            try:
+                await self.current_tts_task
+            except:
+                pass
 
     # =====================================
     # TTS STREAM
