@@ -1,6 +1,10 @@
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
+<<<<<<< HEAD
   "http://localhost:8000"; // local FastAPI backend fallback
+=======
+  "https://your-real-railway-domain.up.railway.app";
+>>>>>>> 871c0995c71836bcd33a127bfa87d7a6428d88df
 
 export async function createLead(payload: {
   name: string;
