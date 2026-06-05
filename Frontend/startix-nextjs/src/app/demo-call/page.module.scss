@@ -1,208 +1,387 @@
-.wrapper {
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   min-height: 100vh;
   background: #ffffff;
-  padding: 20px 16px;
 }
 
-.container {
-  width: 80%;
-  max-width: 1180px;
-  margin: 0 auto;
-  display: flex;
-  gap: 24px;
-}
-
-.leftPanel {
-  width: 340px;
-  min-height: 620px;
-  background: #17253d;
-  border-radius: 28px;
-  padding: 28px 22px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.avatar {
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    #f8d7ff 0%,
-    #f8b86d 55%,
-    #f97316 100%
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 38px;
-  margin-bottom: 20px;
-}
-
-.status {
-  color: white;
-  font-size: 22px;
-  font-weight: 600;
-}
-
-.timer {
-  color: #d1d5db;
-  font-size: 16px;
-  margin: 8px 0 20px;
-}
-
-.wave {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 24px;
-}
-
-.waveBar {
-  width: 4px;
-  background: white;
-  border-radius: 999px;
-}
-
-.selectBox {
-  width: 100%;
-  padding: 14px;
-  border-radius: 14px;
-  font-size: 14px;
-}
-
-.callActions {
-  display: flex;
-  gap: 18px;
-  margin-top: auto;
-}
-
-.callBtn,
-.endBtn {
-  width: 62px;
-  height: 62px;
-  border-radius: 50%;
-  border: none;
-  font-size: 22px;
-  color: white;
-}
-
-.callBtn {
-  background: #22c55e;
-}
-
-.endBtn {
-  background: #ef4444;
-}
+/* ==========================================
+   LEFT PANEL
+========================================== */
 
 .rightPanel {
-  flex: 1;
-  min-width: 0;
-  border: 1px solid #e5e7eb;
-  border-radius: 24px;
+  padding: 40px;
+  border-right: 1px solid #e5e7eb;
 }
 
 .header {
-  padding: 24px;
-  font-size: 20px;
-  font-weight: 600;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.content {
-  padding: 24px;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
 }
 
 .promptBox {
-  background: #f9fafb;
-  padding: 20px;
-  border-radius: 18px;
-  margin-bottom: 20px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 24px;
 }
 
-.messageBox {
-  height: 280px;
-  overflow-y: auto;
-  border: 1px solid #eef2f7;
-  border-radius: 18px;
-  padding: 18px;
-  margin-bottom: 20px;
+.promptBox h2 {
+  margin-bottom: 16px;
 }
 
-.bottomControls {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.controls {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
-.userRow {
+
+.selectBox {
+  height: 56px;
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  padding: 0 16px;
+  font-size: 15px;
+  background: white;
+}
+
+/* ==========================================
+   AGENT PANEL
+========================================== */
+
+.agentPanel {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 14px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 100vh;
+  padding: 40px;
 }
 
-.assistantRow {
+/* ==========================================
+   ORB CONTAINER
+========================================== */
+
+.orbContainer {
+  position: relative;
+
+  width: 420px;
+  height: 420px;
+
   display: flex;
-  justify-content: flex-start;
-  margin-bottom: 14px;
+  justify-content: center;
+  align-items: center;
 }
 
-.userBubble,
-.assistantBubble {
-  max-width: 68%;
-  padding: 14px 18px;
-  border-radius: 18px;
-  font-size: 14px;
-  line-height: 1.7;
+/* ==========================================
+   BACKGROUND GLOW
+========================================== */
+
+.orbGlow {
+  position: absolute;
+
+  width: 320px;
+  height: 320px;
+
+  border-radius: 50%;
+
+  filter: blur(80px);
+
+  opacity: 0.25;
+
+  animation: glowPulse 4s ease-in-out infinite;
 }
 
-.userBubble {
-  background: #dbeafe;
-  border-top-right-radius: 6px;
+/* ==========================================
+   MAIN ORB
+========================================== */
+
+.orb {
+  width: 220px;
+  height: 220px;
+
+  border-radius: 50%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  position: relative;
+  z-index: 10;
+
+  animation: orbPulse 3s ease-in-out infinite;
+
+  box-shadow:
+    0 0 30px rgba(255,255,255,.15),
+    0 0 100px rgba(255,255,255,.08);
 }
 
-.assistantBubble {
-  background: #f3f4f6;
-  border-top-left-radius: 6px;
+/* ==========================================
+   LOGO
+========================================== */
+
+.logo {
+   width: 70px;
+  height: 70px;
+  object-fit: contain;
 }
 
-.messageLabel {
-  font-size: 12px;
+/* ==========================================
+   ROTATING RINGS
+========================================== */
+
+.ring1,
+.ring2,
+.ring3 {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.ring1 {
+  width: 280px;
+  height: 280px;
+
+  animation: rotateClockwise 14s linear infinite;
+}
+
+.ring2 {
+  width: 340px;
+  height: 340px;
+
+  animation: rotateCounterClockwise 20s linear infinite;
+}
+
+.ring3 {
+  position: absolute;
+
+  width: 390px;
+  height: 390px;
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(
+    99,
+    102,
+    241,
+    0.25
+  );
+
+  animation: rotateClockwise 28s linear infinite;
+}
+
+/* ==========================================
+   STATUS COLORS
+========================================== */
+
+.orb_idle,
+.orbGlow_idle {
+  background: linear-gradient(
+    135deg,
+    #4f46e5,
+    #8b5cf6
+  );
+}
+
+.orb_connecting,
+.orbGlow_connecting {
+  background: linear-gradient(
+    135deg,
+    #f97316,
+    #ec4899
+  );
+}
+
+.orb_listening,
+.orbGlow_listening {
+  background: linear-gradient(
+    135deg,
+    #10b981,
+    #06b6d4
+  );
+}
+
+.orb_speaking,
+.orbGlow_speaking {
+  background: linear-gradient(
+    135deg,
+    #7c3aed,
+    #f97316
+  );
+}
+
+.orb_ended,
+.orbGlow_ended {
+  background: linear-gradient(
+    135deg,
+    #6b7280,
+    #9ca3af
+  );
+}
+
+.orb_error,
+.orbGlow_error {
+  background: linear-gradient(
+    135deg,
+    #ef4444,
+    #dc2626
+  );
+}
+
+/* ==========================================
+   STATUS TEXT
+========================================== */
+
+.status {
+  margin-top: 24px;
+
+  font-size: 22px;
   font-weight: 700;
-  margin-bottom: 8px;
-  letter-spacing: 0.5px;
-  color: #1e3a8a;
+
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
+
+.timer {
+  margin-top: 8px;
+
+  font-size: 18px;
+
+  color: #6b7280;
+}
+
+/* ==========================================
+   BUTTONS
+========================================== */
+
+.actionButtons {
+  margin-top: 24px;
+}
+
+.startButton,
+.endButton {
+  border: none;
+
+  border-radius: 999px;
+
+  padding: 16px 32px;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: all .2s ease;
+}
+
+.startButton {
+  background: #111827;
+  color: white;
+}
+
+.startButton:hover {
+  transform: translateY(-2px);
+}
+
+.endButton {
+  background: #ef4444;
+  color: white;
+}
+
+.endButton:hover {
+  transform: translateY(-2px);
+}
+
+/* ==========================================
+   ANIMATIONS
+========================================== */
+
+@keyframes glowPulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.12);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes orbPulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.04);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes rotateClockwise {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotateCounterClockwise {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
 
 @media (max-width: 1024px) {
   .container {
-    flex-direction: column;
-  }
-
-  .bottomControls {
     grid-template-columns: 1fr;
   }
 
-  .leftPanel {
-    width: 100%;
+  .rightPanel {
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
   }
+
+  .orbContainer {
+    width: 320px;
+    height: 320px;
+  }
+
+  .orb {
+    width: 180px;
+    height: 180px;
+  }
+
+  .logo {
+  width: 90px;
+  height: 90px;
 }
 
-@media (max-width: 768px) {
-  .wrapper {
-    padding: 12px;
-  }
-
-  .avatar {
-    width: 140px;
-    height: 140px;
-  }
-
-  .userBubble,
-  .assistantBubble {
-    max-width: 88%;
-  }
-
-  .messageBox {
+  .ring1 {
+    width: 240px;
     height: 240px;
+  }
+
+  .ring2 {
+    width: 290px;
+    height: 290px;
   }
 }

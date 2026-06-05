@@ -28,10 +28,12 @@ async def voice_ws(websocket: WebSocket):
     finally:
         print("[WS CLEANUP]")
 
-        task.cancel()
+        if not task.done():
+            task.cancel()
+
         try:
             await task
-        except:
+        except asyncio.CancelledError:
             pass
 
         await orchestrator._shutdown()

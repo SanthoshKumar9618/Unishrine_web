@@ -7,10 +7,11 @@ class Settings(BaseSettings):
 
     PUBLIC_BASE_URL: str
 
-    GROQ_API_KEY: str   # 🔥 ADD THIS
+    GROQ_API_KEY: str 
+    
+    GEMINI_API_KEY: str
+    OPENAI_API_KEY: str
 
-
-    # ✅ REDIS
     REDIS_HOST: str
     REDIS_PORT: int
     REDIS_DB: int

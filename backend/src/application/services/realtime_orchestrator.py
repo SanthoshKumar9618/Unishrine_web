@@ -1,37 +1,40 @@
 import asyncio
-from typing import Optional
-from src.domain.config.language_rules import get_language_instruction
-from src.domain.config.greetings import  get_dynamic_greeting
+import base64
+import json
 from src.domain.config.assistant_prompts import ASSISTANT_PROMPTS
+from src.domain.services.extractor import extract_entities
+from starlette.websockets import WebSocketState
+
 
 class RealtimeOrchestrator:
-    def __init__(self, stt_stream, llm, tts, websocket):
-        self.stt_stream = stt_stream
-        self.llm = llm
-        self.tts = tts
+    def __init__(
+    self,
+    gemini_live,
+    websocket,
+    session_service,
+    session_id,
+):
+        self.gemini_live = gemini_live
         self.ws = websocket
 
         self.running = True
-
-        # =====================================
-        # DYNAMIC SESSION CONFIG (FROM FRONTEND)
-        # =====================================
         self.current_language = "en-IN"
         self.selected_voice = "female_1"
         self.assistant_type = "insurance_advisor"
         self.system_prompt = ""
 
-        self.last_text = ""
-        self.is_speaking = False
-        self.pending_user_text = ""
-        self.pause_task: Optional[asyncio.Task] = None
-        self.conversation_history = []
+        self.last_text = ""  
+        
+       
         # Human-like pause settings
-        self.reply_delay_seconds = 2
+        
         self.min_text_length = 3
+        self.session_service = session_service
+        self.session_id = session_id
 
-        self.llm_task: Optional[asyncio.Task] = None
-        self.tts_task: Optional[asyncio.Task] = None
+        self.state = None 
+
+     
 
     # =====================================
     # STEP 1: RECEIVE SESSION CONFIG FIRST
@@ -66,6 +69,18 @@ class RealtimeOrchestrator:
                 data.get("language"),
                 "en-IN",
             )
+            language_name_map = {
+                "en-IN": "English",
+                "hi-IN": "Hindi",
+                "te-IN": "Telugu",
+                "kn-IN": "Kannada",
+            }
+
+            self.selected_language_name = (
+                language_name_map[
+                    self.current_language
+                ]
+            )
 
             self.selected_voice = data.get(
                 "voice",
@@ -89,289 +104,260 @@ class RealtimeOrchestrator:
 
         except Exception as e:
             print("[SESSION CONFIG ERROR]:", e)
-    
-
-    # =====================================
-    # GREETING
-    # =====================================
-    async def _send_greeting(self):
-        """
-        Dynamic greeting based on:
-        - assistant_type
-        - selected language
-        - selected frontend voice
-
-        Example:
-        male_1 -> Abhilash
-        female_1 -> Vidya
-        female_2 -> Manisha
-        """
-
-        greeting = get_dynamic_greeting(
-            assistant_type=self.assistant_type,
-            language_code=self.current_language,
-            selected_voice=self.selected_voice,
-        )
-
-        print("\n========== GREETING ==========")
-        print("Assistant Type:", self.assistant_type)
-        print("Language:", self.current_language)
-        print("Selected Voice:", self.selected_voice)
-        print("Greeting:", greeting)
-        print("================================\n")
-
-        # send greeting text to frontend UI
-        await self.ws.send_json({
-            "type": "assistant",
-            "text": greeting,
-        })
-
-        # convert greeting text -> voice audio
-        self.tts_task = asyncio.create_task(
-            self._run_tts(
-                greeting,
-                self.current_language,
-            )
-        )
+        
+        
     # =====================================
     # ENTRYPOINT
     # =====================================
     async def start(self):
-        # STEP 1 → receive frontend config first
+
+        self.state = await self.session_service.load(
+            self.session_id
+        )
+
         await self.initialize_session()
 
-        # STEP 2 → first assistant greeting
-        await self._send_greeting()
+        await self.gemini_live.connect(
+            language=self.selected_language_name,
+            system_prompt=self.system_prompt,
+        )
 
-        # STEP 3 → start STT loop
-        stt_task = asyncio.create_task(
-            self._run_stt()
+        await self.gemini_live.start_conversation()
+
+        send_task = asyncio.create_task(
+            self._send_audio_loop()
+        )
+
+        receive_task = asyncio.create_task(
+            self._receive_gemini_loop()
         )
 
         try:
-            await asyncio.Future()  # keep alive
-
-        except asyncio.CancelledError:
-            print("[ORCH STOPPED CLEANLY]")
+            await asyncio.Future()
 
         finally:
-            await self._shutdown(stt_task)
+            await self._shutdown(send_task, receive_task)
 
-    # =====================================
-    # STT LOOP
-    # =====================================
-    async def _run_stt(self):
-        async for data in self.stt_stream.run(
-            self.ws,
-            language_code=self.current_language,
-        ):
-            text = data["text"]
+    async def _send_audio_loop(self):
 
-            detected_language = data["language"]
+        has_audio = False
 
-            print(
-                "[STT DETECTED LANGUAGE]:",
-                detected_language
-            )
+        while True:
 
-            print("[STT]:", text)
-            await self._handle_text(text)
-    # =====================================
-    # HANDLE USER TEXT
-    # =====================================
-    async def _handle_text(self, text: str):
-        text = text.strip()
-
-        if len(text) < self.min_text_length:
-            return
-
-        if text == self.last_text:
-            return
-
-        self.last_text = text
-
-        await self.ws.send_json({
-            "type": "user",
-            "text": text,
-        })
-        self.conversation_history.append(
-                f"User: {text}"
-            )
-
-        print("[USER SPEECH]:", text)
-
-        # stop frontend current audio immediately
-        await self.ws.send_json({
-            "type": "interrupt"
-        })
-
-        # cancel old waiting pause
-        if self.pause_task and not self.pause_task.done():
-            self.pause_task.cancel()
             try:
-                await self.pause_task
-            except:
-                pass
 
-        # cancel old TTS immediately
-        if self.tts_task and not self.tts_task.done():
-            print("[TTS INTERRUPTED]")
-            self.tts_task.cancel()
-            try:
-                await self.tts_task
-            except:
-                pass
+                audio_chunk = await self.ws.receive_bytes()
 
-        # cancel old LLM if still generating
-        if self.llm_task and not self.llm_task.done():
-            print("[LLM INTERRUPTED]")
-            self.llm_task.cancel()
-            try:
-                await self.llm_task
-            except:
-                pass
+                has_audio = True
 
-        # important:
-        # merge user continuation instead of overwrite
-        if self.pending_user_text:
-            self.pending_user_text += " " + text
-        else:
-            self.pending_user_text = text
-
-        # wait 2 sec before final reply
-        self.pause_task = asyncio.create_task(
-            self._delayed_reply()
-        )
-        
-        
-    async def _delayed_reply(self):
-        try:
-            print("[WAITING 2 SEC BEFORE REPLY]")
-
-            await asyncio.sleep(2)
-
-            if not self.pending_user_text:
-                return
-
-            final_text = self.pending_user_text
-            self.pending_user_text = ""
-
-            print("[FINAL USER INPUT]:", final_text)
-
-            self.llm_task = asyncio.create_task(
-                self._run_llm(
-                    final_text,
-                    self.current_language
+                await self.gemini_live.send_audio(
+                    audio_chunk
                 )
-            )
 
-        except asyncio.CancelledError:
-            print("[USER CONTINUED SPEAKING]")
-       
-        
+            except Exception as e:
+
+                print(
+                    "[SEND AUDIO ERROR]",
+                    e
+                )
+
+                break
+
+
+    async def _receive_gemini_loop(self):
+
+        async for event in self.gemini_live.receive():
+
+            try:
+
+                event_type = event.get("type")
+                
+                if event_type == "error":
+
+                    print("\n========== OPENAI ERROR ==========")
+                    print(event)
+                    print("=================================\n")
+
+                if "transcription" in event_type:
+
+                    print(
+                        "\n========== TRANSCRIPTION EVENT =========="
+                    )
+                    print(event)
+                    print(
+                        "========================================\n"
+                    )
+                
+                # print(
+                #         f"[OPENAI EVENT] {event_type}"
+                #     )
+
+                # =====================================
+                # AUDIO STREAM
+                # =====================================
+
+                if event_type == "response.output_audio.delta":
+
+    #                 print(
+    #     f"AUDIO DELTA RECEIVED: {len(event['delta'])}"
+    # )
+
+                    audio_b64 = event["delta"]
+
+                    audio_bytes = base64.b64decode(
+                        audio_b64
+                    )
+
+                    if self.ws.client_state != WebSocketState.CONNECTED:
+                        break
+
+                    await self.ws.send_bytes(
+                        audio_bytes
+                    )
+
+                # =====================================
+                # USER TRANSCRIPT
+                # =====================================
+                elif event_type.startswith(
+                    "conversation.item.input_audio"
+                ):
+                    print(
+                        "\n========== USER AUDIO EVENT =========="
+                    )
+                    print(event)
+                    print(
+                        "======================================"
+                    )
+
+                elif (
+                    event_type ==
+                    "conversation.item.input_audio_transcription.completed"
+                ):
+
+                    transcript = event.get(
+                        "transcript",
+                        ""
+                    )
+
+                    if transcript:
+
+                        print(
+                            "\n========== USER TRANSCRIPT =========="
+                        )
+                        print(repr(transcript))
+                        print(
+                            "=====================================\n"
+                        )
+
+                        print(
+                            f"\n[USER]: {transcript}\n"
+                        )
+
+                        self.state["history"].append(
+                            f"User: {transcript}"
+                        )
+
+                        await self.ws.send_json({
+
+                            "type": "user",
+
+                            "text": transcript,
+                        })
+
+                # =====================================
+                # ASSISTANT RESPONSE
+                # =====================================
+
+                elif (
+                    event_type ==
+                    "response.output_audio_transcript.done"
+                ):
+
+                    transcript = event.get(
+                        "transcript",
+                        ""
+                    )
+
+                    if transcript:
+
+                        print(
+                            f"\n[ASSISTANT]: {transcript}\n"
+                        )
+
+                        self.state["history"].append(
+                            f"Assistant: {transcript}"
+                        )
+
+                        if self.ws.client_state == WebSocketState.CONNECTED:
+                            await self.ws.send_json({
+
+                            "type": "assistant",
+
+                            "text": transcript,
+                        })
+
+                # =====================================
+                # SAVE SESSION
+                # =====================================
+                elif event_type == "conversation.item.done":
+
+                    print(
+                        "\n========== ITEM DONE =========="
+                    )
+
+                    print(
+                        json.dumps(
+                            event,
+                            indent=2
+                        )
+                    )
+
+                    print(
+                        "===============================\n"
+                    )
+
+                elif event_type == "response.done":
+
+                    await self.session_service.save(
+                        self.session_id,
+                        self.state,
+                    )
+
+                # =====================================
+                # ERRORS
+                # =====================================
+
+                # elif event_type == "error":
+
+                #     print(
+                #         "\n[OPENAI ERROR]",
+                #         event,
+                #         "\n"
+                #     )
+
+            except Exception as e:
+
+                print(
+                    "\n[RECEIVE LOOP ERROR]",
+                    repr(e),
+                    "\n"
+                )
+
+                break
     
-
-    # =====================================
-    # LLM STREAM
-    # =====================================
-    async def _run_llm(self, text: str, lang: str):
-        print("[LLM START]")
-
-        full_text = ""
-        language_instruction = get_language_instruction(lang)
-
-        try:
-            # keep last 6 exchanges only
-            recent_history = "\n".join(
-                self.conversation_history[-6:]
-            )
-
-            prompt = f"""
-    SYSTEM:
-    {language_instruction}
-
-    BUSINESS ROLE:
-    {self.system_prompt}
-
-    CONVERSATION HISTORY:
-    {recent_history}
-
-    LATEST USER MESSAGE:
-    {text}
-
-    IMPORTANT:
-- Do not repeat already answered questions
-- Continue naturally from previous context
-- Ask only the next required question
-- Never assume user details that were not explicitly provided
-- If information is missing, politely ask for clarification
-- If the user has not shared their name, do not use any name
-- Do not guess customer information
-- Only use facts explicitly stated by the user
-
-    ASSISTANT RESPONSE:
-    """
-
-            async for token in self.llm.stream(prompt):
-                full_text += token
-
-            print("[LLM DONE]:", full_text)
-
-            self.conversation_history.append(
-                f"Assistant: {full_text}"
-            )
-
-            await self.ws.send_json({
-                "type": "assistant",
-                "text": full_text,
-            })
-
-            self.tts_task = asyncio.create_task(
-                self._run_tts(full_text, lang)
-            )
-
-        except asyncio.CancelledError:
-            print("[LLM CANCELLED]")
-
-    # =====================================
-    # TTS STREAM
-    # =====================================
-    async def _run_tts(self, text: str, lang: str):
-        self.is_speaking = True
-        print("[TTS START]")
-
-        try:
-            async for audio in self.tts.stream(
-                text,
-                language=lang,
-                voice=self.selected_voice,
-            ):
-                await self.ws.send_bytes(audio)
-
-            print("[TTS COMPLETED]")
-
-        except asyncio.CancelledError:
-            print("[TTS CANCELLED]")
-
-        finally:
-            self.is_speaking = False
-
     # =====================================
     # CLEAN SHUTDOWN
     # =====================================
     async def _shutdown(self, *tasks):
+
         print("[ORCH SHUTDOWN]")
 
         for task in tasks:
             task.cancel()
 
-        if self.llm_task:
-            self.llm_task.cancel()
-
-        if self.tts_task:
-            self.tts_task.cancel()
-
         await asyncio.gather(
             *tasks,
             return_exceptions=True,
         )
+
+        await self.gemini_live.close()
