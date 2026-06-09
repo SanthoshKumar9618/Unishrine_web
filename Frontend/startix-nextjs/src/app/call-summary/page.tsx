@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import "./CallSummary.scss";
+import router from "next/dist/client/router";
 
 type Message = {
   role: "user" | "assistant";
@@ -32,6 +33,10 @@ export default function CallSummaryPage() {
   const handleHomepageRedirect = () => {
     window.location.href = "/";
   };
+
+  const handleHomepageAssistant = () => {
+  window.location.href = "/demo-call";
+};
 
  return (
   <section className="call-summary-page">
@@ -65,6 +70,13 @@ export default function CallSummaryPage() {
           >
             Back to Homepage
           </button>
+           <button
+  className="secondary-btn"
+  onClick={handleHomepageAssistant}
+>
+  Back to Assistant
+</button>
+
         </div>
       </div>
 
