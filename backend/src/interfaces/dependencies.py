@@ -14,8 +14,8 @@ from src.infrastructure.realtime.openai_realtime_client import (
 def get_realtime_orchestrator(websocket):
 
     redis_client = RedisClient(
-        url="redis://localhost:6379"
-    )
+    url=settings.REDIS_URL
+)
 
     session_service = SessionService(
         redis_client
