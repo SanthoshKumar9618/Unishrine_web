@@ -10,8 +10,13 @@ ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
 
 
+database_url = settings.DATABASE_URL.replace(
+    "postgresql://",
+    "postgresql+asyncpg://"
+)
+
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    database_url,
     pool_pre_ping=True,
     connect_args={
         "ssl": ssl_context,
