@@ -13,9 +13,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
 
 
-    REDIS_HOST: str
-    REDIS_PORT: int
-    REDIS_DB: int
+    REDIS_URL: str
     REDIS_SESSION_TTL: int
     
     SARVAM_API_KEY: str 
