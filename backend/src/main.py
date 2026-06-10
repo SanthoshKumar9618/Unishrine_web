@@ -42,8 +42,8 @@ app.add_middleware(
 
         "https://unishrine.com",
         "https://www.unishrine.com",
+        "https://unishrineweb-production-b31d.up.railway.app",
 
-        "https://unishrineweb-production.up.railway.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],

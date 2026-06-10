@@ -1,7 +1,6 @@
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-
-  "http://localhost:8000";
+  "https://unishrineweb-production-b31d.up.railway.app";
 
 const WS_URL = API_URL
   .replace("https://", "wss://")

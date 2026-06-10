@@ -1,6 +1,6 @@
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:8000"; // local FastAPI backend fallback
+  "https://unishrineweb-production-b31d.up.railway.app"; // local FastAPI backend fallback
 
 
 export async function createLead(payload: {
