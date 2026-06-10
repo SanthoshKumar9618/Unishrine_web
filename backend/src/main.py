@@ -36,12 +36,12 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
+        # "http://localhost:3000",
+        # "http://localhost:3001",
 
 
-        "https://unishrine.com",
-        "https://www.unishrine.com",
+        # "https://unishrine.com",
+        # "https://www.unishrine.com",
         "https://unishrineweb-production-b31d.up.railway.app",
 
     ],
